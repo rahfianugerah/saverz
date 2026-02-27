@@ -11,7 +11,7 @@ A minimalist, local-first productivity dashboard built with Astro and React.
 
 ### Overview
 
-Saverz is a lightweight productivity dashboard that runs entirely in the browser. All data is persisted locally using IndexedDB through Dexie.js. There is no server, no cloud dependency, and no account required. The application provides three core tools: a structured prompt builder for LLMs, a bookmark manager with favicon previews, and a Markdown-powered note editor.
+Saverz is a lightweight mini dashboard bookmark that runs entirely in the browser. All data is persisted locally using IndexedDB through Dexie.js. There is no server, no cloud dependency, and no account required. The application provides three core tools: a structured prompt builder for LLMs, a bookmark manager with favicon previews, and a Markdown-powered note editor.
 
 ### Features
 
