@@ -57,8 +57,8 @@ export default function Sidebar() {
       >
         {/* Logo */}
         <div className="px-6 py-6 border-b border-border">
-          <h1 className="text-xl font-bold tracking-[0.3em] text-foreground">SVRZ</h1>
-          <p className="text-xs text-muted mt-0.5">Productivity Dashboard</p>
+          <h1 className="text-xl font-bold tracking-[0.3em] text-foreground">SAVERZ</h1>
+          <p className="text-xs text-muted mt-0.5">Smart Archive Vault for Every Resource Zone</p>
         </div>
 
         {/* Nav items */}

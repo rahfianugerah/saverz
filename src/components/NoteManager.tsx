@@ -28,12 +28,7 @@ function NoteCard({
   onDelete: (id: number) => void;
 }) {
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ duration: 0.2 }}
+    <div
       className="card group cursor-pointer"
       onClick={() => onEdit(note)}
     >
@@ -73,7 +68,7 @@ function NoteCard({
           minute: '2-digit',
         })}
       </p>
-    </motion.div>
+    </div>
   );
 }
 
@@ -150,38 +145,20 @@ function NoteEditor({
 
         {/* Editor body */}
         <div className="flex-1 overflow-y-auto">
-          <AnimatePresence mode="wait">
-            {showPreview ? (
-              <motion.div
-                key="preview"
-                initial={{ opacity: 0, x: 20, filter: 'blur(4px)' }}
-                animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
-                exit={{ opacity: 0, x: -20, filter: 'blur(4px)' }}
-                transition={{ duration: 0.25, ease: 'easeInOut' }}
-                className="p-5 prose prose-invert prose-sm max-w-none prose-headings:text-foreground prose-p:text-foreground/80 prose-a:text-accent prose-strong:text-foreground prose-code:text-accent prose-code:bg-background prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-pre:bg-background prose-pre:border prose-pre:border-border"
-              >
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {content || '*Nothing to preview*'}
-                </ReactMarkdown>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="editor"
-                initial={{ opacity: 0, x: -20, filter: 'blur(4px)' }}
-                animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
-                exit={{ opacity: 0, x: 20, filter: 'blur(4px)' }}
-                transition={{ duration: 0.25, ease: 'easeInOut' }}
-                className="h-full"
-              >
-                <textarea
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  placeholder="Write your notes in Markdown..."
-                  className="w-full h-full min-h-[300px] bg-transparent text-foreground/90 font-mono text-sm p-5 focus:outline-none resize-none placeholder:text-muted/40 leading-relaxed"
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {showPreview ? (
+            <div className="p-5 prose prose-invert prose-sm max-w-none prose-headings:text-foreground prose-p:text-foreground/80 prose-a:text-accent prose-strong:text-foreground prose-code:text-accent prose-code:bg-background prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-pre:bg-background prose-pre:border prose-pre:border-border">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {content || '*Nothing to preview*'}
+              </ReactMarkdown>
+            </div>
+          ) : (
+            <textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Write your notes in Markdown..."
+              className="w-full h-full min-h-[300px] bg-transparent text-foreground/90 font-mono text-sm p-5 focus:outline-none resize-none placeholder:text-muted/40 leading-relaxed"
+            />
+          )}
         </div>
 
         {/* Editor footer */}
@@ -257,7 +234,6 @@ export default function NoteManager() {
         </div>
       ) : (
         <div className={isGrid ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3' : 'space-y-3'}>
-          <AnimatePresence>
             {notes.map((note) => (
               <NoteCard
                 key={note.id}
@@ -267,7 +243,6 @@ export default function NoteManager() {
                 onDelete={handleDelete}
               />
             ))}
-          </AnimatePresence>
         </div>
       )}
 

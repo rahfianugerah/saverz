@@ -311,15 +311,8 @@ export default function PromptBuilder() {
               labelB="List"
             />
           </div>
-          <AnimatePresence mode="wait">
             {taskType === 'textarea' ? (
-              <motion.div
-                key="textarea"
-                initial={{ opacity: 0, x: -20, filter: 'blur(4px)' }}
-                animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
-                exit={{ opacity: 0, x: 20, filter: 'blur(4px)' }}
-                transition={{ duration: 0.25, ease: 'easeInOut' }}
-              >
+              <div>
                 <textarea
                   value={taskContent}
                   onChange={(e) => setTaskContent(e.target.value)}
@@ -327,19 +320,12 @@ export default function PromptBuilder() {
                   rows={4}
                   className="textarea-field"
                 />
-              </motion.div>
+              </div>
             ) : (
-              <motion.div
-                key="list"
-                initial={{ opacity: 0, x: 20, filter: 'blur(4px)' }}
-                animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
-                exit={{ opacity: 0, x: -20, filter: 'blur(4px)' }}
-                transition={{ duration: 0.25, ease: 'easeInOut' }}
-              >
+              <div>
                 <DynamicList items={taskItems} onChange={setTaskItems} placeholder="Task item..." />
-              </motion.div>
+              </div>
             )}
-          </AnimatePresence>
         </div>
 
         {/* Rules Section */}
