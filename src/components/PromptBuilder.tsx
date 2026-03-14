@@ -9,7 +9,7 @@ import { Textarea } from './ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { ModeSwitch } from './ui/mode-switch';
 
-// ── Dynamic List Input ─────────────────────────────────
+// Dynamic List Input
 function DynamicList({
   items,
   onChange,
@@ -71,7 +71,7 @@ function DynamicList({
   );
 }
 
-// ── Preview Block ──────────────────────────────────────
+// Preview Block
 function PromptPreview({ prompt }: { prompt: { title: string; role: string; taskType: 'textarea' | 'list'; taskContent: string; taskItems: string[]; rules: string[] } }) {
   const [copied, setCopied] = useState(false);
 
@@ -142,7 +142,7 @@ function PromptPreview({ prompt }: { prompt: { title: string; role: string; task
   );
 }
 
-// ── Saved Prompt Card ──────────────────────────────────
+// Saved Prompt Card
 function SavedPromptCard({ prompt, onDelete }: { prompt: Prompt; onDelete: (id: number) => void }) {
   const [copied, setCopied] = useState(false);
 
@@ -205,7 +205,7 @@ function SavedPromptCard({ prompt, onDelete }: { prompt: Prompt; onDelete: (id: 
   );
 }
 
-// ── Main Prompt Builder ────────────────────────────────
+// Main Prompt Builder
 export default function PromptBuilder() {
   const prompts = usePrompts();
 

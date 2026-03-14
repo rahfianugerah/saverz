@@ -18,7 +18,7 @@ import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { ModeSwitch } from './ui/mode-switch';
 
-// ── Note Card ──────────────────────────────────────────
+// Note Card
 function NoteCard({
   note,
   isLong,
@@ -78,7 +78,7 @@ function NoteCard({
   );
 }
 
-// ── Note Editor Modal ──────────────────────────────────
+// Note Editor Modal
 function NoteEditor({
   note,
   onClose,
@@ -189,7 +189,7 @@ function NoteEditor({
   );
 }
 
-// ── Main Note Manager ──────────────────────────────────
+// Main Note Manager
 export default function NoteManager() {
   const notes = useNotes();
   const [notesLengthMode, setNotesLengthMode] = useState<'short' | 'long'>('short');

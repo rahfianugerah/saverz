@@ -6,7 +6,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 
-// ── Link Card ──────────────────────────────────────────
+// Link Card
 function LinkCard({ link, onDelete }: { link: { id?: number; name: string; url: string }; onDelete: (id: number) => void }) {
   const faviconUrl = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(new URL(link.url).hostname)}&sz=32`;
 
@@ -61,7 +61,7 @@ function LinkCard({ link, onDelete }: { link: { id?: number; name: string; url: 
   );
 }
 
-// ── Main Link Manager ──────────────────────────────────
+// Main Link Manager
 export default function LinkManager() {
   const links = useLinks();
   const [name, setName] = useState('');

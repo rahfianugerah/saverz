@@ -2,7 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from './db';
 import type { Prompt, Link, Note } from './types';
 
-// ── Prompts ──────────────────────────────────────────────
+// Prompts
 export function usePrompts() {
   return useLiveQuery(() => db.prompts.orderBy('createdAt').reverse().toArray()) ?? [];
 }
@@ -19,7 +19,7 @@ export async function deletePrompt(id: number) {
   return db.prompts.delete(id);
 }
 
-// ── Links ────────────────────────────────────────────────
+// Links
 export function useLinks() {
   return useLiveQuery(() => db.links.orderBy('createdAt').reverse().toArray()) ?? [];
 }
@@ -36,7 +36,7 @@ export async function updateLink(id: number, data: Partial<Link>) {
   return db.links.update(id, data);
 }
 
-// ── Notes ────────────────────────────────────────────────
+// Notes
 export function useNotes() {
   return useLiveQuery(() => db.notes.orderBy('updatedAt').reverse().toArray()) ?? [];
 }
