@@ -46,10 +46,6 @@ function splitChunkIntoEstimatedTokens(chunk: string) {
   return pieces;
 }
 
-function estimateTokenCountFromChunks(chunks: string[]) {
-  return chunks.reduce((total, chunk) => total + Math.max(1, Math.ceil(chunk.length / 4)), 0);
-}
-
 function tokenIdFromText(value: string) {
   let hash = 0;
   for (let index = 0; index < value.length; index += 1) {
@@ -190,13 +186,13 @@ export default function Tokenizer() {
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 placeholder="Paste or write your text here..."
-                rows={10}
-                className="resize-y font-mono"
+                rows={14}
+                className="h-[380px] resize-none overflow-y-auto scrollbar-hidden font-mono"
               />
             </div>
             <div>
               <p className="mb-1.5 text-xs font-medium text-muted-foreground">Tokenized Text (Estimated)</p>
-              <div className="min-h-[242px] rounded-md border border-border bg-background/70 p-3 font-mono text-sm">
+              <div className="h-[380px] overflow-y-auto scrollbar-hidden rounded-md border border-border bg-background/70 p-3 font-mono text-sm">
                 {tokenPieces.length === 0 ? (
                   <p className="text-sm text-muted-foreground">Token chunks appear here.</p>
                 ) : (
@@ -227,7 +223,7 @@ export default function Tokenizer() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-2 text-center sm:grid-cols-3">
         {stats.map((stat) => (
           <div key={stat.label} className="text-sm text-muted-foreground">
             <span className="font-semibold text-foreground">{stat.value}</span> {stat.label.toLowerCase()}

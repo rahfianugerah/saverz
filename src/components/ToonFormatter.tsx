@@ -100,12 +100,12 @@ export default function ToonFormatter() {
                 onChange={(event) => setInput(event.target.value)}
                 placeholder="Paste JSON object..."
                 rows={14}
-                className="resize-y font-mono text-sm"
+                className="h-[420px] resize-none overflow-y-auto scrollbar-hidden font-mono text-sm"
               />
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-medium text-muted-foreground">TOON Output</label>
-              <div className="h-full min-h-[302px] overflow-auto rounded-lg border border-border bg-background/70 p-3 font-mono text-xs leading-relaxed text-foreground/90">
+              <div className="h-[420px] overflow-y-auto scrollbar-hidden rounded-lg border border-border bg-background/70 p-3 font-mono text-xs leading-relaxed text-foreground/90">
                 {output ? output : <span className="text-muted-foreground">Converted TOON output appears here.</span>}
               </div>
             </div>

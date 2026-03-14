@@ -1,11 +1,14 @@
 import { atom } from 'nanostores';
 
 export type ActivePage =
+	| 'api-endpoint-architect'
+	| 'credential-vault'
 	| 'prompts'
 	| 'links'
 	| 'notes'
 	| 'tokenizer'
 	| 'data-formatter'
+	| 'sql-formatter'
 	| 'toon-formatter'
 	| 'password-vault';
 

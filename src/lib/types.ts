@@ -36,9 +36,24 @@ export interface PasswordEntry {
   label?: string;
 }
 
+export interface CredentialEntry {
+  id: string;
+  label: string;
+  key: string;
+  value: string;
+  vendorTag: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
 export interface VaultPayload {
   schemaVersion: number;
   entries: PasswordEntry[];
+}
+
+export interface CredentialVaultPayload {
+  schemaVersion: number;
+  entries: CredentialEntry[];
 }
 
 export interface VaultRecord {

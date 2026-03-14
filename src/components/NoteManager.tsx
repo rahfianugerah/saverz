@@ -20,12 +20,10 @@ import { ModeSwitch } from './ui/mode-switch';
 // Note Card
 function NoteCard({
   note,
-  isLong,
   onEdit,
   onDelete,
 }: {
   note: Note;
-  isLong: boolean;
   onEdit: (note: Note) => void;
   onDelete: (id: number) => void;
 }) {
@@ -61,8 +59,8 @@ function NoteCard({
             </Button>
           </div>
         </div>
-        <div className={`relative flex-1 overflow-hidden text-xs text-muted-foreground/90 ${isLong ? 'line-clamp-6' : 'line-clamp-2'}`}>
-          {note.content ? note.content.slice(0, isLong ? 420 : 160) : 'Empty note'}
+        <div className="relative flex-1 overflow-hidden text-xs text-muted-foreground/90 line-clamp-2">
+          {note.content ? note.content.slice(0, 160) : 'Empty note'}
         </div>
         <p className="mt-3 text-[10px] text-muted-foreground/60">
           {new Date(note.updatedAt).toLocaleDateString('en-US', {
@@ -166,7 +164,6 @@ function NoteEditor({
 // Main Note Manager
 export default function NoteManager() {
   const notes = useNotes();
-  const [notesLengthMode, setNotesLengthMode] = useState<'short' | 'long'>('short');
   const [editingNote, setEditingNote] = useState<Note | null | 'new'>(null);
 
   const handleDelete = async (id: number) => {
@@ -187,14 +184,6 @@ export default function NoteManager() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <ModeSwitch
-            value={notesLengthMode}
-            onChange={setNotesLengthMode}
-            options={[
-              { value: 'short', label: 'Short' },
-              { value: 'long', label: 'Long' },
-            ]}
-          />
           <Button
             onClick={() => setEditingNote('new')}
             className="flex items-center gap-1.5 text-sm"
@@ -213,12 +202,11 @@ export default function NoteManager() {
           <p className="mt-1 text-xs text-muted-foreground/70">Create your first note to get started</p>
         </div>
       ) : (
-        <div className={notesLengthMode === 'long' ? 'grid grid-cols-1 gap-3 lg:grid-cols-2' : 'grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3'}>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {notes.map((note) => (
             <div key={note.id}>
               <NoteCard
                 note={note}
-                isLong={notesLengthMode === 'long'}
                 onEdit={(n) => setEditingNote(n)}
                 onDelete={handleDelete}
               />
