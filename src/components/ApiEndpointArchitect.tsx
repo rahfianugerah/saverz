@@ -125,7 +125,7 @@ export default function ApiEndpointArchitect() {
                 <select
                   value={method}
                   onChange={(event) => setMethod(event.target.value as HttpMethod)}
-                  className="h-10 w-32 rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className="w-32"
                 >
                   <option value="GET">GET</option>
                   <option value="POST">POST</option>
@@ -163,7 +163,7 @@ export default function ApiEndpointArchitect() {
               </div>
               <div className="space-y-2">
                 {headers.map((header) => (
-                  <div key={header.id} className="grid grid-cols-1 gap-2 md:grid-cols-[1fr_1fr_auto]">
+                  <div key={header.id} className="grid grid-cols-1 gap-2 rounded-lg border border-border/70 bg-background/35 p-2 md:grid-cols-[1fr_1fr_auto]">
                     <Input
                       value={header.key}
                       onChange={(event) => updateHeader(header.id, 'key', event.target.value)}

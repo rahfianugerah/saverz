@@ -78,7 +78,7 @@ export default function SqlFormatter() {
               id="sql-dialect"
               value={dialect}
               onChange={(event) => setDialect(event.target.value as SqlDialect)}
-              className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              className="w-[180px]"
             >
               <option value="mysql">MySQL</option>
               <option value="postgresql">PostgreSQL</option>

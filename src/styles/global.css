@@ -71,6 +71,33 @@
       linear-gradient(180deg, hsl(var(--background)), hsl(var(--background)));
   }
 
+  textarea {
+    resize: none;
+  }
+
+  select {
+    @apply h-10 rounded-lg border border-input bg-background px-3 py-2 pr-9 text-sm text-foreground transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+    appearance: none;
+    background-image:
+      linear-gradient(45deg, transparent 50%, hsl(var(--muted-foreground)) 50%),
+      linear-gradient(135deg, hsl(var(--muted-foreground)) 50%, transparent 50%);
+    background-position:
+      calc(100% - 16px) calc(50% + 1px),
+      calc(100% - 11px) calc(50% + 1px);
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+  }
+
+  select:hover {
+    border-color: hsl(var(--primary) / 0.45);
+    background-color: hsl(var(--accent) / 0.65);
+  }
+
+  select option {
+    background-color: hsl(var(--card));
+    color: hsl(var(--card-foreground));
+  }
+
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;

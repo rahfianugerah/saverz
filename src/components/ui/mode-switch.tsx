@@ -31,8 +31,8 @@ export function ModeSwitch<T extends string>({ value, options, onChange, classNa
             type="button"
             onClick={() => onChange(option.value)}
             className={cn(
-              'rounded-md px-3 py-1.5 text-xs font-medium',
-              isActive ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+              'rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200',
+              isActive ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground'
             )}
             aria-selected={isActive}
             role="tab"

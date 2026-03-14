@@ -566,7 +566,6 @@ export default function PasswordVault() {
                   value={form.notes}
                   onChange={(event) => setForm((previous) => ({ ...previous, notes: event.target.value }))}
                   rows={3}
-                  className="resize-y"
                   placeholder="Recovery notes, MFA hints, or account details"
                 />
               </div>
