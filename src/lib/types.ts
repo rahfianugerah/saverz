@@ -25,13 +25,14 @@ export interface Note {
 
 export interface PasswordEntry {
   id: string;
-  label: string;
+  accountName: string;
   username: string;
   password: string;
   url: string;
   notes: string;
   createdAt: number;
   updatedAt: number;
+  label?: string;
 }
 
 export interface VaultPayload {

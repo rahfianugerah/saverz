@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { HiOutlinePlus, HiOutlineTrash, HiOutlineLink, HiOutlineArrowTopRightOnSquare } from 'react-icons/hi2';
 import { useLinks, addLink, deleteLink } from '../lib/hooks';
 import { Button } from './ui/button';
@@ -11,14 +10,7 @@ function LinkCard({ link, onDelete }: { link: { id?: number; name: string; url: 
   const faviconUrl = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(new URL(link.url).hostname)}&sz=32`;
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ duration: 0.2 }}
-      className="group"
-    >
+    <div className="group">
       <Card>
         <CardContent className="flex items-center gap-4 p-4">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-background">
@@ -35,7 +27,7 @@ function LinkCard({ link, onDelete }: { link: { id?: number; name: string; url: 
             <h4 className="truncate text-sm font-medium text-foreground">{link.name}</h4>
             <p className="truncate text-xs text-muted-foreground">{link.url}</p>
           </div>
-          <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+          <div className="flex shrink-0 items-center gap-1 opacity-0 group-hover:opacity-100">
             <Button
               onClick={() => window.open(link.url, '_blank', 'noopener,noreferrer')}
               variant="ghost"
@@ -57,7 +49,7 @@ function LinkCard({ link, onDelete }: { link: { id?: number; name: string; url: 
           </div>
         </CardContent>
       </Card>
-    </motion.div>
+    </div>
   );
 }
 
@@ -163,11 +155,9 @@ export default function LinkManager() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <AnimatePresence>
-            {links.map((link) => (
-              <LinkCard key={link.id} link={link} onDelete={handleDelete} />
-            ))}
-          </AnimatePresence>
+          {links.map((link) => (
+            <LinkCard key={link.id} link={link} onDelete={handleDelete} />
+          ))}
         </div>
       )}
     </div>

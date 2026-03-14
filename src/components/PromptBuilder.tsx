@@ -1,5 +1,4 @@
 import React, { useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { HiOutlinePlus, HiOutlineTrash, HiOutlineClipboardDocument, HiOutlineCheck, HiOutlineSparkles } from 'react-icons/hi2';
 import { usePrompts, addPrompt, deletePrompt } from '../lib/hooks';
 import type { Prompt } from '../lib/types';
@@ -29,35 +28,26 @@ function DynamicList({
 
   return (
     <div className="space-y-2">
-      <AnimatePresence initial={false}>
-        {items.map((item, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2 }}
-            className="flex items-center gap-2"
+      {items.map((item, index) => (
+        <div key={index} className="flex items-center gap-2">
+          <span className="w-5 shrink-0 text-center text-xs text-muted-foreground">{index + 1}.</span>
+          <Input
+            value={item}
+            onChange={(e) => updateItem(index, e.target.value)}
+            placeholder={placeholder}
+            className="h-9 flex-1"
+          />
+          <Button
+            onClick={() => removeItem(index)}
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 shrink-0 text-destructive"
+            aria-label="Remove item"
           >
-            <span className="w-5 shrink-0 text-center text-xs text-muted-foreground">{index + 1}.</span>
-            <Input
-              value={item}
-              onChange={(e) => updateItem(index, e.target.value)}
-              placeholder={placeholder}
-              className="h-9 flex-1"
-            />
-            <Button
-              onClick={() => removeItem(index)}
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 shrink-0 text-destructive"
-              aria-label="Remove item"
-            >
-              <HiOutlineTrash size={16} />
-            </Button>
-          </motion.div>
-        ))}
-      </AnimatePresence>
+            <HiOutlineTrash size={16} />
+          </Button>
+        </div>
+      ))}
       <Button
         onClick={addItem}
         variant="ghost"
@@ -179,12 +169,7 @@ function SavedPromptCard({ prompt, onDelete }: { prompt: Prompt; onDelete: (id: 
   };
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-    >
+    <div>
       <Card>
         <CardContent className="flex items-start justify-between gap-3 p-4">
           <div className="min-w-0 flex-1">
@@ -201,7 +186,7 @@ function SavedPromptCard({ prompt, onDelete }: { prompt: Prompt; onDelete: (id: 
           </div>
         </CardContent>
       </Card>
-    </motion.div>
+    </div>
   );
 }
 
@@ -292,35 +277,21 @@ export default function PromptBuilder() {
               />
             </div>
 
-            <AnimatePresence mode="wait" initial={false}>
-              {taskType === 'textarea' ? (
-                <motion.div
-                  key="textarea"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.18 }}
-                >
-                  <Textarea
+            {taskType === 'textarea' ? (
+              <div>
+                <Textarea
                   value={taskContent}
                   onChange={(e) => setTaskContent(e.target.value)}
                   placeholder="Describe the task in detail..."
                   rows={4}
                   className="resize-none"
                 />
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="list"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.18 }}
-                >
-                  <DynamicList items={taskItems} onChange={setTaskItems} placeholder="Task item..." />
-                </motion.div>
-              )}
-            </AnimatePresence>
+              </div>
+            ) : (
+              <div>
+                <DynamicList items={taskItems} onChange={setTaskItems} placeholder="Task item..." />
+              </div>
+            )}
           </div>
 
           {/* Rules Section */}
@@ -344,11 +315,9 @@ export default function PromptBuilder() {
         <div className="mt-2">
           <h3 className="mb-4 text-sm font-medium text-muted-foreground">Saved Prompts ({prompts.length})</h3>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            <AnimatePresence>
-              {prompts.map((prompt) => (
-                <SavedPromptCard key={prompt.id} prompt={prompt} onDelete={handleDelete} />
-              ))}
-            </AnimatePresence>
+            {prompts.map((prompt) => (
+              <SavedPromptCard key={prompt.id} prompt={prompt} onDelete={handleDelete} />
+            ))}
           </div>
         </div>
       )}

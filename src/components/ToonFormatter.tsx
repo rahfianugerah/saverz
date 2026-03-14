@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
 import {
   HiOutlineCubeTransparent,
   HiOutlineArrowDownCircle,
@@ -128,14 +127,10 @@ export default function ToonFormatter() {
           </div>
 
           {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3"
-            >
+            <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3">
               <HiOutlineExclamationTriangle size={16} className="mt-0.5 text-destructive" />
               <p className="text-xs text-destructive">{error}</p>
-            </motion.div>
+            </div>
           )}
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">

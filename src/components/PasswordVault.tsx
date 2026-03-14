@@ -1,20 +1,19 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  HiOutlineShieldCheck,
-  HiOutlineLockClosed,
-  HiOutlineLockOpen,
-  HiOutlineKey,
-  HiOutlineEye,
-  HiOutlineEyeSlash,
-  HiOutlineTrash,
-  HiOutlinePlus,
-  HiOutlineClipboardDocument,
+  HiOutlineArrowPath,
   HiOutlineCheck,
   HiOutlineChevronDown,
-  HiOutlineArrowPath,
-  HiOutlinePencilSquare,
+  HiOutlineClipboardDocument,
   HiOutlineExclamationTriangle,
+  HiOutlineEye,
+  HiOutlineEyeSlash,
+  HiOutlineKey,
+  HiOutlineLockClosed,
+  HiOutlineLockOpen,
+  HiOutlinePencilSquare,
+  HiOutlinePlus,
+  HiOutlineShieldCheck,
+  HiOutlineTrash,
 } from 'react-icons/hi2';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
@@ -26,8 +25,16 @@ import { cn } from '../lib/utils';
 
 type VaultStatus = 'checking' | 'setup' | 'locked' | 'unlocked';
 
-const emptyForm = {
-  label: '',
+interface EntryFormState {
+  accountName: string;
+  username: string;
+  password: string;
+  url: string;
+  notes: string;
+}
+
+const emptyForm: EntryFormState = {
+  accountName: '',
   username: '',
   password: '',
   url: '',
@@ -36,6 +43,22 @@ const emptyForm = {
 
 function sortEntries(entries: PasswordEntry[]) {
   return [...entries].sort((a, b) => b.updatedAt - a.updatedAt);
+}
+
+function normalizeEntry(entry: Partial<PasswordEntry> & { id: string }): PasswordEntry {
+  const accountName = (entry.accountName ?? entry.label ?? '').trim() || 'Untitled Account';
+
+  return {
+    id: entry.id,
+    accountName,
+    label: accountName,
+    username: entry.username ?? '',
+    password: entry.password ?? '',
+    url: entry.url ?? '',
+    notes: entry.notes ?? '',
+    createdAt: entry.createdAt ?? Date.now(),
+    updatedAt: entry.updatedAt ?? Date.now(),
+  };
 }
 
 export default function PasswordVault() {
@@ -49,11 +72,15 @@ export default function PasswordVault() {
 
   const [sessionKey, setSessionKey] = useState<CryptoKey | null>(null);
   const [record, setRecord] = useState<VaultRecord | null>(null);
-  const [entries, setEntries] = useState<PasswordEntry[]>([]);
+  const keyRef = useRef<CryptoKey | null>(null);
+  const recordRef = useRef<VaultRecord | null>(null);
 
-  const [form, setForm] = useState(emptyForm);
+  const [entries, setEntries] = useState<PasswordEntry[]>([]);
+  const [form, setForm] = useState<EntryFormState>(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const [showFormPassword, setShowFormPassword] = useState(false);
   const [visiblePasswords, setVisiblePasswords] = useState<Set<string>>(new Set());
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
@@ -67,6 +94,7 @@ export default function PasswordVault() {
 
         if (existing) {
           setRecord(existing);
+          recordRef.current = existing;
           setStatus('locked');
         } else {
           setStatus('setup');
@@ -96,28 +124,42 @@ export default function PasswordVault() {
 
   const lockVault = () => {
     setSessionKey(null);
+    keyRef.current = null;
+
+    setRecord(null);
+    recordRef.current = null;
+
     setEntries([]);
     setExpandedId(null);
     setVisiblePasswords(new Set());
     setEditingId(null);
     setForm(emptyForm);
+    setShowFormPassword(false);
     clearVolatileSecrets();
     setStatus('locked');
   };
 
   const persistEntries = async (nextEntries: PasswordEntry[]) => {
-    if (!sessionKey || !record) {
+    const currentKey = keyRef.current;
+    const currentRecord = recordRef.current;
+
+    if (!currentKey || !currentRecord) {
       throw new Error('Vault session is locked. Unlock again to save changes.');
     }
 
-    const nextRecord = await saveVaultEntries(sessionKey, record, nextEntries);
+    const sanitizedEntries = nextEntries.map((entry) => normalizeEntry(entry));
+    const nextRecord = await saveVaultEntries(currentKey, currentRecord, sanitizedEntries);
+
+    recordRef.current = nextRecord;
     setRecord(nextRecord);
-    setEntries(sortEntries(nextEntries));
+    setEntries(sortEntries(sanitizedEntries));
   };
 
   const handleCreateVault = async () => {
-    if (setupPassword.length < 12) {
-      setError('Master password must be at least 12 characters.');
+    if (busy) return;
+
+    if (!setupPassword) {
+      setError('Master password is required.');
       return;
     }
 
@@ -132,7 +174,11 @@ export default function PasswordVault() {
     try {
       const created = await createVault(setupPassword);
       setSessionKey(created.key);
+      keyRef.current = created.key;
+
       setRecord(created.record);
+      recordRef.current = created.record;
+
       setEntries([]);
       setStatus('unlocked');
       clearVolatileSecrets();
@@ -145,7 +191,9 @@ export default function PasswordVault() {
   };
 
   const handleUnlockVault = async () => {
-    if (!unlockPassword.trim()) {
+    if (busy) return;
+
+    if (!unlockPassword) {
       setError('Master password is required.');
       return;
     }
@@ -156,8 +204,13 @@ export default function PasswordVault() {
     try {
       const unlocked = await unlockVault(unlockPassword);
       setSessionKey(unlocked.key);
+      keyRef.current = unlocked.key;
+
       setRecord(unlocked.record);
-      setEntries(sortEntries(unlocked.payload.entries));
+      recordRef.current = unlocked.record;
+
+      const normalizedEntries = unlocked.payload.entries.map((entry) => normalizeEntry(entry));
+      setEntries(sortEntries(normalizedEntries));
       setStatus('unlocked');
       clearVolatileSecrets();
     } catch (unknownError) {
@@ -171,16 +224,19 @@ export default function PasswordVault() {
   const resetEntryForm = () => {
     setForm(emptyForm);
     setEditingId(null);
+    setShowFormPassword(false);
   };
 
   const handleSaveEntry = async () => {
-    if (!form.label.trim()) {
-      setError('Entry label is required.');
+    if (busy) return;
+
+    if (!form.accountName.trim()) {
+      setError('Account Name is required.');
       return;
     }
 
-    if (!form.password.trim()) {
-      setError('Entry password is required.');
+    if (!form.password) {
+      setError('Password is required.');
       return;
     }
 
@@ -189,7 +245,8 @@ export default function PasswordVault() {
 
     const nextEntry: PasswordEntry = {
       id: editingId ?? crypto.randomUUID(),
-      label: form.label.trim(),
+      accountName: form.accountName.trim(),
+      label: form.accountName.trim(),
       username: form.username.trim(),
       password: form.password,
       url: form.url.trim(),
@@ -218,6 +275,8 @@ export default function PasswordVault() {
   };
 
   const handleDeleteEntry = async (id: string) => {
+    if (busy) return;
+
     setBusy(true);
     setError('');
 
@@ -237,13 +296,14 @@ export default function PasswordVault() {
 
   const handleEditEntry = (entry: PasswordEntry) => {
     setForm({
-      label: entry.label,
+      accountName: entry.accountName,
       username: entry.username,
       password: entry.password,
       url: entry.url,
       notes: entry.notes,
     });
     setEditingId(entry.id);
+    setShowFormPassword(false);
   };
 
   const handleCopyPassword = async (entry: PasswordEntry) => {
@@ -287,20 +347,16 @@ export default function PasswordVault() {
       </div>
 
       {error && (
-        <motion.div
-          initial={{ opacity: 0, y: -6 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3"
-        >
+        <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3">
           <HiOutlineExclamationTriangle size={16} className="mt-0.5 text-destructive" />
           <p className="text-xs text-destructive">{error}</p>
-        </motion.div>
+        </div>
       )}
 
       {status === 'checking' && (
         <Card>
           <CardContent className="flex items-center gap-2 p-6 text-sm text-muted-foreground">
-            <HiOutlineArrowPath className="animate-spin" size={18} />
+            <HiOutlineArrowPath size={18} />
             Checking vault state...
           </CardContent>
         </Card>
@@ -322,7 +378,7 @@ export default function PasswordVault() {
                   type="password"
                   value={setupPassword}
                   onChange={(event) => setSetupPassword(event.target.value)}
-                  placeholder="At least 12 characters"
+                  placeholder="Choose your master password"
                 />
               </div>
               <div>
@@ -379,10 +435,10 @@ export default function PasswordVault() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
-                  <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Label</label>
+                  <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Account Name</label>
                   <Input
-                    value={form.label}
-                    onChange={(event) => setForm((previous) => ({ ...previous, label: event.target.value }))}
+                    value={form.accountName}
+                    onChange={(event) => setForm((previous) => ({ ...previous, accountName: event.target.value }))}
                     placeholder="GitHub"
                   />
                 </div>
@@ -396,12 +452,23 @@ export default function PasswordVault() {
                 </div>
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Password</label>
-                  <Input
-                    type="text"
-                    value={form.password}
-                    onChange={(event) => setForm((previous) => ({ ...previous, password: event.target.value }))}
-                    placeholder="Strong credential"
-                  />
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type={showFormPassword ? 'text' : 'password'}
+                      value={form.password}
+                      onChange={(event) => setForm((previous) => ({ ...previous, password: event.target.value }))}
+                      placeholder="Credential password"
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9"
+                      onClick={() => setShowFormPassword((value) => !value)}
+                      aria-label={showFormPassword ? 'Hide password' : 'View password'}
+                    >
+                      {showFormPassword ? <HiOutlineEyeSlash size={16} /> : <HiOutlineEye size={16} />}
+                    </Button>
+                  </div>
                 </div>
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-muted-foreground">URL</label>
@@ -446,123 +513,113 @@ export default function PasswordVault() {
                 <p className="text-sm text-muted-foreground">No entries yet. Add your first credential above.</p>
               ) : (
                 <div className="space-y-3">
-                  <AnimatePresence>
-                    {entries.map((entry) => {
-                      const expanded = expandedId === entry.id;
-                      const visiblePassword = visiblePasswords.has(entry.id);
+                  {entries.map((entry) => {
+                    const expanded = expandedId === entry.id;
+                    const visiblePassword = visiblePasswords.has(entry.id);
 
-                      return (
-                        <motion.div
-                          key={entry.id}
-                          layout
-                          initial={{ opacity: 0, y: 8 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -8 }}
-                          className="overflow-hidden rounded-lg border border-border bg-background/60"
+                    return (
+                      <div
+                        key={entry.id}
+                        className="overflow-hidden rounded-lg border border-border bg-background/60"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => setExpandedId(expanded ? null : entry.id)}
+                          className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
                         >
-                          <button
-                            type="button"
-                            onClick={() => setExpandedId(expanded ? null : entry.id)}
-                            className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
-                          >
-                            <div className="min-w-0">
-                              <p className="truncate text-sm font-medium text-foreground">{entry.label}</p>
-                              <p className="truncate text-xs text-muted-foreground">
-                                {entry.username || 'No username'}
-                              </p>
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium text-foreground">{entry.accountName}</p>
+                            <p className="truncate text-xs text-muted-foreground">
+                              {entry.username || 'No username'}
+                            </p>
+                          </div>
+                          <HiOutlineChevronDown
+                            size={16}
+                            className={cn('shrink-0 text-muted-foreground', expanded && 'rotate-180')}
+                          />
+                        </button>
+
+                        {expanded && (
+                          <div className="border-t border-border px-4 py-3">
+                            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                              <div>
+                                <p className="text-[11px] uppercase tracking-wide text-muted-foreground/80">Account Name</p>
+                                <p className="text-sm text-foreground/90">{entry.accountName}</p>
+                              </div>
+                              <div>
+                                <p className="text-[11px] uppercase tracking-wide text-muted-foreground/80">Username</p>
+                                <p className="text-sm text-foreground/90">{entry.username || '-'}</p>
+                              </div>
+                              <div>
+                                <p className="text-[11px] uppercase tracking-wide text-muted-foreground/80">URL</p>
+                                <p className="truncate text-sm text-foreground/90">{entry.url || '-'}</p>
+                              </div>
+                              <div className="md:col-span-2">
+                                <p className="text-[11px] uppercase tracking-wide text-muted-foreground/80">Password</p>
+                                <div className="mt-1 flex items-center gap-2">
+                                  <Input
+                                    readOnly
+                                    value={entry.password}
+                                    type={visiblePassword ? 'text' : 'password'}
+                                    className="h-9 flex-1"
+                                  />
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-9 w-9"
+                                    onClick={() => togglePasswordVisibility(entry.id)}
+                                    aria-label={visiblePassword ? 'Hide password' : 'View password'}
+                                  >
+                                    {visiblePassword ? <HiOutlineEyeSlash size={16} /> : <HiOutlineEye size={16} />}
+                                  </Button>
+                                </div>
+                              </div>
+                              {entry.notes && (
+                                <div className="md:col-span-2">
+                                  <p className="text-[11px] uppercase tracking-wide text-muted-foreground/80">Notes</p>
+                                  <p className="mt-1 text-sm text-foreground/90">{entry.notes}</p>
+                                </div>
+                              )}
                             </div>
-                            <HiOutlineChevronDown
-                              size={16}
-                              className={cn('shrink-0 text-muted-foreground transition-transform', expanded && 'rotate-180')}
-                            />
-                          </button>
 
-                          <AnimatePresence initial={false}>
-                            {expanded && (
-                              <motion.div
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                transition={{ duration: 0.2 }}
-                                className="border-t border-border px-4 py-3"
+                            <div className="mt-4 flex flex-wrap items-center gap-2">
+                              <Button
+                                onClick={() => handleCopyPassword(entry)}
+                                variant="secondary"
+                                size="sm"
+                                className="gap-1.5"
                               >
-                                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                                  <div>
-                                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground/80">Username</p>
-                                    <p className="text-sm text-foreground/90">{entry.username || '-'}</p>
-                                  </div>
-                                  <div>
-                                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground/80">URL</p>
-                                    <p className="truncate text-sm text-foreground/90">{entry.url || '-'}</p>
-                                  </div>
-                                  <div className="md:col-span-2">
-                                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground/80">Password</p>
-                                    <div className="mt-1 flex items-center gap-2">
-                                      <Input
-                                        readOnly
-                                        value={entry.password}
-                                        type={visiblePassword ? 'text' : 'password'}
-                                        className="h-9 flex-1"
-                                      />
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-9 w-9"
-                                        onClick={() => togglePasswordVisibility(entry.id)}
-                                        aria-label={visiblePassword ? 'Hide password' : 'Show password'}
-                                      >
-                                        {visiblePassword ? <HiOutlineEyeSlash size={16} /> : <HiOutlineEye size={16} />}
-                                      </Button>
-                                    </div>
-                                  </div>
-                                  {entry.notes && (
-                                    <div className="md:col-span-2">
-                                      <p className="text-[11px] uppercase tracking-wide text-muted-foreground/80">Notes</p>
-                                      <p className="mt-1 text-sm text-foreground/90">{entry.notes}</p>
-                                    </div>
-                                  )}
-                                </div>
-
-                                <div className="mt-4 flex flex-wrap items-center gap-2">
-                                  <Button
-                                    onClick={() => handleCopyPassword(entry)}
-                                    variant="secondary"
-                                    size="sm"
-                                    className="gap-1.5"
-                                  >
-                                    {copiedId === entry.id ? (
-                                      <HiOutlineCheck size={14} className="text-primary" />
-                                    ) : (
-                                      <HiOutlineClipboardDocument size={14} />
-                                    )}
-                                    {copiedId === entry.id ? 'Copied' : 'Copy Password'}
-                                  </Button>
-                                  <Button
-                                    onClick={() => handleEditEntry(entry)}
-                                    variant="ghost"
-                                    size="sm"
-                                    className="gap-1.5"
-                                  >
-                                    <HiOutlinePencilSquare size={14} />
-                                    Edit
-                                  </Button>
-                                  <Button
-                                    onClick={() => handleDeleteEntry(entry.id)}
-                                    variant="ghost"
-                                    size="sm"
-                                    className="gap-1.5 text-destructive"
-                                  >
-                                    <HiOutlineTrash size={14} />
-                                    Delete
-                                  </Button>
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </motion.div>
-                      );
-                    })}
-                  </AnimatePresence>
+                                {copiedId === entry.id ? (
+                                  <HiOutlineCheck size={14} className="text-primary" />
+                                ) : (
+                                  <HiOutlineClipboardDocument size={14} />
+                                )}
+                                {copiedId === entry.id ? 'Copied' : 'Copy Password'}
+                              </Button>
+                              <Button
+                                onClick={() => handleEditEntry(entry)}
+                                variant="ghost"
+                                size="sm"
+                                className="gap-1.5"
+                              >
+                                <HiOutlinePencilSquare size={14} />
+                                Edit
+                              </Button>
+                              <Button
+                                onClick={() => handleDeleteEntry(entry.id)}
+                                variant="ghost"
+                                size="sm"
+                                className="gap-1.5 text-destructive"
+                              >
+                                <HiOutlineTrash size={14} />
+                                Delete
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </CardContent>

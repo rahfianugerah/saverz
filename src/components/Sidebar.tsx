@@ -1,31 +1,53 @@
 import React from 'react';
 import { useStore } from '@nanostores/react';
-import { $activePage, $sidebarOpen, $desktopSidebarOpen, type ActivePage } from '../lib/stores';
-import { motion, AnimatePresence } from 'framer-motion';
+import { $activePage, $desktopSidebarOpen, $sidebarOpen, type ActivePage } from '../lib/stores';
 import {
-  HiOutlineCommandLine,
-  HiOutlineLink,
-  HiOutlineDocumentText,
   HiOutlineBars3,
-  HiOutlineXMark,
-  HiOutlineSparkles,
-  HiOutlineChevronDoubleLeft,
   HiOutlineCodeBracket,
+  HiOutlineCommandLine,
   HiOutlineCubeTransparent,
+  HiOutlineDocumentText,
+  HiOutlineLink,
   HiOutlineLockClosed,
+  HiOutlineSparkles,
 } from 'react-icons/hi2';
 import { cn } from '../lib/utils';
 import { Button } from './ui/button';
 
 const navItems: { id: ActivePage; label: string; icon: React.ReactNode }[] = [
-  { id: 'prompts', label: 'Prompts', icon: <HiOutlineCommandLine size={20} /> },
   { id: 'data-formatter', label: 'Data Formatter', icon: <HiOutlineCodeBracket size={20} /> },
-  { id: 'toon-formatter', label: 'TOON Formatter', icon: <HiOutlineCubeTransparent size={20} /> },
   { id: 'links', label: 'Links', icon: <HiOutlineLink size={20} /> },
   { id: 'notes', label: 'Notes', icon: <HiOutlineDocumentText size={20} /> },
-  { id: 'tokenizer', label: 'Tokenizer', icon: <HiOutlineSparkles size={20} /> },
   { id: 'password-vault', label: 'Password Vault', icon: <HiOutlineLockClosed size={20} /> },
+  { id: 'prompts', label: 'Prompts', icon: <HiOutlineCommandLine size={20} /> },
+  { id: 'toon-formatter', label: 'TOON Formatter', icon: <HiOutlineCubeTransparent size={20} /> },
+  { id: 'tokenizer', label: 'Tokenizer', icon: <HiOutlineSparkles size={20} /> },
 ];
+
+function HamburgerIcon({ open, className }: { open: boolean; className?: string }) {
+  return (
+    <span className={cn('relative block h-4 w-5', className)} aria-hidden="true">
+      <span
+        className={cn(
+          'absolute left-0 top-0 block h-0.5 w-5 rounded-full bg-current transition-transform duration-200',
+          open && 'translate-y-[7px] rotate-45'
+        )}
+      />
+      <span
+        className={cn(
+          'absolute left-0 top-[7px] block h-0.5 w-5 rounded-full bg-current transition-opacity duration-200',
+          open ? 'opacity-0' : 'opacity-100'
+        )}
+      />
+      <span
+        className={cn(
+          'absolute bottom-0 left-0 block h-0.5 w-5 rounded-full bg-current transition-transform duration-200',
+          open && '-translate-y-[7px] -rotate-45'
+        )}
+      />
+    </span>
+  );
+}
 
 export default function Sidebar() {
   const activePage = useStore($activePage);
@@ -39,8 +61,7 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Mobile header */}
-      <header className="fixed left-0 right-0 top-0 z-50 flex items-center justify-between border-b border-border bg-card/90 px-4 py-3 backdrop-blur md:hidden">
+      <header className="fixed left-0 right-0 top-0 z-50 flex items-center justify-between border-b border-border bg-card/95 px-4 py-3 md:hidden">
         <span className="text-lg font-bold tracking-[0.24em] text-foreground">SAVERZ</span>
         <Button
           onClick={() => $sidebarOpen.set(!sidebarOpen)}
@@ -49,35 +70,22 @@ export default function Sidebar() {
           className="h-9 w-9"
           aria-label="Toggle menu"
         >
-          {sidebarOpen ? <HiOutlineXMark size={22} /> : <HiOutlineBars3 size={22} />}
+          <HamburgerIcon open={sidebarOpen} />
         </Button>
       </header>
 
-      {/* Mobile overlay */}
-      <AnimatePresence>
-        {sidebarOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="md:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
-            onClick={() => $sidebarOpen.set(false)}
-          />
-        )}
-      </AnimatePresence>
+      {sidebarOpen && <div className="fixed inset-0 z-40 bg-black/60 md:hidden" onClick={() => $sidebarOpen.set(false)} />}
 
-      {/* Sidebar */}
       <aside
         className={cn(
-          'fixed left-0 top-0 z-50 flex h-screen flex-col border-r border-border bg-card transition-all duration-300 ease-in-out',
-          'md:sticky md:top-0 md:z-auto md:shrink-0 overflow-hidden',
-          sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full w-64 md:translate-x-0',
-          desktopSidebarOpen ? 'md:w-64' : 'md:w-0 md:border-none md:opacity-0'
+          'fixed left-0 top-0 z-50 flex h-screen flex-col overflow-hidden border-border bg-card transition-transform duration-200',
+          'md:sticky md:top-0 md:z-auto md:shrink-0',
+          sidebarOpen ? 'translate-x-0 w-64 border-r' : '-translate-x-full w-64 md:translate-x-0',
+          desktopSidebarOpen ? 'md:w-64 md:border-r md:pointer-events-auto' : 'md:w-0 md:border-transparent md:pointer-events-none'
         )}
       >
-        <div className="w-64 flex flex-col h-full">
-          {/* Logo */}
-          <div className="flex items-center justify-between border-b border-border px-6 py-6 shrink-0">
+        <div className="w-64 h-full flex flex-col">
+          <div className="flex items-center justify-between border-b border-border px-6 py-6">
             <div>
               <h1 className="text-xl font-bold tracking-[0.24em] text-foreground">SAVERZ</h1>
               <p className="mt-0.5 text-xs text-muted-foreground">Smart Archive Vault for Every Resource Zone</p>
@@ -86,41 +94,37 @@ export default function Sidebar() {
               variant="ghost"
               size="icon"
               onClick={() => $desktopSidebarOpen.set(false)}
-              className="hidden md:flex h-8 w-8 text-muted-foreground hover:text-foreground shrink-0"
+              className="hidden h-8 w-8 text-muted-foreground hover:text-foreground md:flex"
               aria-label="Close Sidebar"
             >
-              <HiOutlineChevronDoubleLeft size={18} />
+              <HamburgerIcon open={desktopSidebarOpen} className="h-3.5 w-4" />
             </Button>
           </div>
 
-          {/* Nav items */}
           <nav className="flex-1 space-y-1 px-3 py-4">
-            {navItems.map((item) => (
-              <Button
-                key={item.id}
-                onClick={() => handleNav(item.id)}
-                variant="ghost"
-                className={cn(
-                  'relative h-auto w-full justify-start gap-4 rounded-lg px-4 py-3 text-sm font-medium transition-colors hover:bg-accent/70',
-                  activePage === item.id ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
-                )}
-              >
-                {activePage === item.id && (
-                  <motion.span
-                    layoutId="active-nav-pill"
-                    className="absolute inset-0 rounded-lg border border-primary/20 bg-primary/15"
-                    transition={{ type: 'spring', stiffness: 340, damping: 30 }}
-                  />
-                )}
-                <span className="relative z-10">{item.icon}</span>
-                <span className="relative z-10">{item.label}</span>
-              </Button>
-            ))}
+            {navItems.map((item) => {
+              const isActive = activePage === item.id;
+              return (
+                <Button
+                  key={item.id}
+                  onClick={() => handleNav(item.id)}
+                  variant="ghost"
+                  className={cn(
+                    'h-auto w-full justify-start gap-4 rounded-lg px-4 py-3 text-sm font-medium',
+                    isActive
+                      ? 'bg-primary/15 text-foreground border border-primary/25'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/60'
+                  )}
+                >
+                  <span>{item.icon}</span>
+                  <span>{item.label}</span>
+                </Button>
+              );
+            })}
           </nav>
 
-          {/* Footer */}
-          <div className="border-t border-border px-6 py-4 shrink-0">
-            <p className="text-xs text-muted-foreground/70"> &copy; 2026 Saverz. All Rights Reserved.</p>
+          <div className="border-t border-border px-6 py-4">
+            <p className="text-xs text-muted-foreground/70">&copy; 2026 Saverz. All Rights Reserved.</p>
           </div>
         </div>
       </aside>

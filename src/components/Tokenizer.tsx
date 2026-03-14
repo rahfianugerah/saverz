@@ -1,5 +1,4 @@
 import React, { useMemo, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { HiOutlineCommandLine, HiOutlineClipboardDocument, HiOutlineTrash, HiOutlineCheck } from 'react-icons/hi2';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Textarea } from './ui/textarea';
@@ -107,21 +106,13 @@ export default function Tokenizer() {
           ) : (
             <div className="max-h-72 overflow-y-auto rounded-lg border border-border bg-background/70 p-3">
               <div className="flex flex-wrap gap-2">
-                <AnimatePresence>
-                  {words.map((word, index) => (
-                    <motion.div
-                      key={`${word}-${index}`}
-                      initial={{ opacity: 0, scale: 0.92, y: 6 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.92, y: -6 }}
-                      transition={{ duration: 0.16 }}
-                    >
-                      <Badge variant="secondary" className="font-mono text-xs">
-                        {index + 1}. {word}
-                      </Badge>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
+                {words.map((word, index) => (
+                  <div key={`${word}-${index}`}>
+                    <Badge variant="secondary" className="font-mono text-xs">
+                      {index + 1}. {word}
+                    </Badge>
+                  </div>
+                ))}
               </div>
             </div>
           )}

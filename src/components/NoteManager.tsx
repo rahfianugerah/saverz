@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import {
@@ -31,11 +30,11 @@ function NoteCard({
   onDelete: (id: number) => void;
 }) {
   return (
-    <Card className="group h-full cursor-pointer transition-colors hover:border-muted-foreground/30" onClick={() => onEdit(note)}>
+    <Card className="group h-full cursor-pointer hover:border-muted-foreground/30" onClick={() => onEdit(note)}>
       <CardContent className="flex h-full flex-col p-4">
-        <motion.div layout="position" className="mb-2 flex items-start justify-between gap-2">
+        <div className="mb-2 flex items-start justify-between gap-2">
           <h4 className="flex-1 truncate text-sm font-medium text-foreground">{note.title || 'Untitled'}</h4>
-          <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+          <div className="flex shrink-0 items-center gap-1 opacity-0 group-hover:opacity-100">
             <Button
               onClick={(e) => {
                 e.stopPropagation();
@@ -61,18 +60,18 @@ function NoteCard({
               <HiOutlineTrash size={14} />
             </Button>
           </div>
-        </motion.div>
-        <motion.div layout="position" className={`relative flex-1 overflow-hidden text-xs text-muted-foreground/90 transition-all duration-300 ${isLong ? 'line-clamp-6' : 'line-clamp-2'}`}>
+        </div>
+        <div className={`relative flex-1 overflow-hidden text-xs text-muted-foreground/90 ${isLong ? 'line-clamp-6' : 'line-clamp-2'}`}>
           {note.content ? note.content.slice(0, isLong ? 420 : 160) : 'Empty note'}
-        </motion.div>
-        <motion.p layout="position" className="mt-3 text-[10px] text-muted-foreground/60">
+        </div>
+        <p className="mt-3 text-[10px] text-muted-foreground/60">
           {new Date(note.updatedAt).toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric',
             hour: '2-digit',
             minute: '2-digit',
           })}
-        </motion.p>
+        </p>
       </CardContent>
     </Card>
   );
@@ -101,20 +100,11 @@ function NoteEditor({
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+    <div
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        transition={{ duration: 0.2 }}
-        className="flex max-h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-xl border border-border bg-card"
-      >
+      <div className="flex max-h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-xl border border-border bg-card">
         {/* Editor header */}
         <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
           <Input
@@ -140,40 +130,24 @@ function NoteEditor({
 
         {/* Editor body */}
         <div className="flex-1 overflow-y-auto">
-          <AnimatePresence mode="wait" initial={false}>
-            {editorMode === 'preview' ? (
-              <motion.div
-                key="preview"
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.16 }}
-                className="p-5"
-              >
-                <div className="prose prose-invert prose-sm max-w-none prose-headings:text-foreground prose-p:text-foreground/85 prose-a:text-primary prose-strong:text-foreground prose-code:text-primary prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-pre:bg-background prose-pre:border prose-pre:border-border">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {content || '*Nothing to preview*'}
-                  </ReactMarkdown>
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="edit"
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.16 }}
-                className="h-full min-h-[340px] p-5"
-              >
-                <Textarea
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  placeholder="Write your notes in Markdown..."
-                  className="h-full min-h-[300px] resize-none border-none bg-transparent p-0 font-mono text-sm leading-relaxed focus-visible:ring-0"
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {editorMode === 'preview' ? (
+            <div className="p-5">
+              <div className="prose prose-invert prose-sm max-w-none prose-headings:text-foreground prose-p:text-foreground/85 prose-a:text-primary prose-strong:text-foreground prose-code:text-primary prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-pre:bg-background prose-pre:border prose-pre:border-border">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {content || '*Nothing to preview*'}
+                </ReactMarkdown>
+              </div>
+            </div>
+          ) : (
+            <div className="h-full min-h-[340px] p-5">
+              <Textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="Write your notes in Markdown..."
+                className="h-full min-h-[300px] resize-none border-none bg-transparent p-0 font-mono text-sm leading-relaxed focus-visible:ring-0"
+              />
+            </div>
+          )}
         </div>
 
         {/* Editor footer */}
@@ -184,8 +158,8 @@ function NoteEditor({
             {isEditing ? 'Update' : 'Save'}
           </Button>
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 }
 
@@ -239,38 +213,27 @@ export default function NoteManager() {
           <p className="mt-1 text-xs text-muted-foreground/70">Create your first note to get started</p>
         </div>
       ) : (
-        <motion.div layout className={notesLengthMode === 'long' ? 'grid grid-cols-1 gap-3 lg:grid-cols-2' : 'grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3'}>
-          <AnimatePresence mode="popLayout">
-            {notes.map((note) => (
-              <motion.div
-                layout
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.2 }}
-                key={note.id}
-              >
-                <NoteCard
-                  note={note}
-                  isLong={notesLengthMode === 'long'}
-                  onEdit={(n) => setEditingNote(n)}
-                  onDelete={handleDelete}
-                />
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </motion.div>
+        <div className={notesLengthMode === 'long' ? 'grid grid-cols-1 gap-3 lg:grid-cols-2' : 'grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3'}>
+          {notes.map((note) => (
+            <div key={note.id}>
+              <NoteCard
+                note={note}
+                isLong={notesLengthMode === 'long'}
+                onEdit={(n) => setEditingNote(n)}
+                onDelete={handleDelete}
+              />
+            </div>
+          ))}
+        </div>
       )}
 
       {/* Note Editor */}
-      <AnimatePresence>
-        {editingNote !== null && (
-          <NoteEditor
-            note={editingNote === 'new' ? null : editingNote}
-            onClose={() => setEditingNote(null)}
-          />
-        )}
-      </AnimatePresence>
+      {editingNote !== null && (
+        <NoteEditor
+          note={editingNote === 'new' ? null : editingNote}
+          onClose={() => setEditingNote(null)}
+        />
+      )}
     </div>
   );
 }

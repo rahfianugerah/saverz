@@ -1,5 +1,4 @@
 import React, { useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
 import {
   HiOutlineCodeBracket,
   HiOutlineScissors,
@@ -11,8 +10,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Textarea } from './ui/textarea';
 import { Button } from './ui/button';
-import { ModeSwitch } from './ui/mode-switch';
-import { formatJson, parseStructuredInput, type StructuredInputMode } from '../lib/dataFormatter';
+import { formatJson } from '../lib/dataFormatter';
 
 interface JsonToken {
   text: string;
@@ -68,17 +66,14 @@ export default function DataFormatter() {
   const [output, setOutput] = useState('');
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
-  const [inputMode, setInputMode] = useState<StructuredInputMode>('auto');
-  const [outputLooksJson, setOutputLooksJson] = useState(true);
 
   const highlightedOutput = useMemo(() => tokenizeJson(output), [output]);
 
-  const apply = (action: () => string, outputIsJson = true) => {
+  const apply = (action: () => string) => {
     try {
       const next = action();
       setOutput(next);
       setError('');
-      setOutputLooksJson(outputIsJson);
     } catch (unknownError) {
       const message = unknownError instanceof Error ? unknownError.message : 'Unexpected formatting error.';
       setError(message);
@@ -101,7 +96,7 @@ export default function DataFormatter() {
         </div>
         <div>
           <h2 className="text-xl font-semibold">Data Formatter</h2>
-          <p className="text-sm text-muted-foreground">Beautify and minify JSON, or transform CSV and logs into structured JSON.</p>
+          <p className="text-sm text-muted-foreground">Fast JSON beautify and minify for cleaner payload editing.</p>
         </div>
       </div>
 
@@ -109,7 +104,7 @@ export default function DataFormatter() {
         <Card>
           <CardHeader>
             <CardTitle>Input</CardTitle>
-            <CardDescription>Paste JSON, CSV, or key=value logs.</CardDescription>
+            <CardDescription>Paste raw JSON input.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Textarea
@@ -138,34 +133,6 @@ export default function DataFormatter() {
                 Minify JSON
               </Button>
             </div>
-            <div className="rounded-lg border border-border bg-muted/50 p-3">
-              <div className="mb-2 flex items-center justify-between gap-3">
-                <p className="text-xs font-medium text-muted-foreground">Structured parser mode</p>
-                <ModeSwitch
-                  value={inputMode}
-                  onChange={setInputMode}
-                  options={[
-                    { value: 'auto', label: 'Auto' },
-                    { value: 'csv', label: 'CSV' },
-                    { value: 'logs', label: 'Logs' },
-                  ]}
-                />
-              </div>
-              <Button
-                onClick={() =>
-                  apply(
-                    () => JSON.stringify(parseStructuredInput(input, inputMode), null, 2),
-                    true
-                  )
-                }
-                variant="ghost"
-                className="h-9 gap-1.5"
-                disabled={!input.trim()}
-              >
-                <HiOutlineCodeBracket size={16} />
-                Parse to JSON
-              </Button>
-            </div>
           </CardContent>
         </Card>
 
@@ -182,28 +149,20 @@ export default function DataFormatter() {
           </CardHeader>
           <CardContent>
             {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -6 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-3 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3"
-              >
+              <div className="mb-3 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3">
                 <HiOutlineExclamationTriangle size={16} className="mt-0.5 text-destructive" />
                 <p className="text-xs text-destructive">{error}</p>
-              </motion.div>
+              </div>
             )}
             <div className="min-h-[410px] overflow-auto rounded-lg border border-border bg-background/70 p-4">
               {output.trim() ? (
-                outputLooksJson ? (
-                  <pre className="whitespace-pre-wrap break-words font-mono text-sm leading-relaxed">
-                    {highlightedOutput.map((token, index) => (
-                      <span key={`${token.text}-${index}`} className={token.className}>
-                        {token.text}
-                      </span>
-                    ))}
-                  </pre>
-                ) : (
-                  <pre className="whitespace-pre-wrap break-words font-mono text-sm leading-relaxed text-foreground/90">{output}</pre>
-                )
+                <pre className="whitespace-pre-wrap break-words font-mono text-sm leading-relaxed">
+                  {highlightedOutput.map((token, index) => (
+                    <span key={`${token.text}-${index}`} className={token.className}>
+                      {token.text}
+                    </span>
+                  ))}
+                </pre>
               ) : (
                 <p className="text-sm text-muted-foreground">Run an operation to see output.</p>
               )}
