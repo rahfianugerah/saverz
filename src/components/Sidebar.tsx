@@ -27,7 +27,7 @@ export default function Sidebar() {
     <>
       {/* Mobile header */}
       <header className="fixed left-0 right-0 top-0 z-50 flex items-center justify-between border-b border-border bg-card/90 px-4 py-3 backdrop-blur md:hidden">
-        <span className="text-lg font-bold tracking-[0.24em] text-foreground">SVRZ</span>
+        <span className="text-lg font-bold tracking-[0.24em] text-foreground">SAVERZ</span>
         <Button
           onClick={() => $sidebarOpen.set(!sidebarOpen)}
           variant="ghost"
@@ -65,8 +65,8 @@ export default function Sidebar() {
           {/* Logo */}
           <div className="flex items-center justify-between border-b border-border px-6 py-6 shrink-0">
             <div>
-              <h1 className="text-xl font-bold tracking-[0.3em] text-foreground">SAVERZ</h1>
-              <p className="mt-0.5 text-xs text-muted-foreground">Smart Archive</p>
+              <h1 className="text-xl font-bold tracking-[0.24em] text-foreground">SAVERZ</h1>
+              <p className="mt-0.5 text-xs text-muted-foreground">Smart Archive Vault for Every Resource Zone</p>
             </div>
             <Button
               variant="ghost"
@@ -106,7 +106,7 @@ export default function Sidebar() {
 
           {/* Footer */}
           <div className="border-t border-border px-6 py-4 shrink-0">
-            <p className="text-xs text-muted-foreground/70">Local-first • No cloud</p>
+            <p className="text-xs text-muted-foreground/70"> &copy; 2026 Saverz. All Rights Reserved.</p>
           </div>
         </div>
       </aside>
