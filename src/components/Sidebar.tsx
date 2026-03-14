@@ -1,19 +1,22 @@
 import React from 'react';
 import { useStore } from '@nanostores/react';
-import { $activePage, $sidebarOpen, type ActivePage } from '../lib/stores';
+import { $activePage, $sidebarOpen, $desktopSidebarOpen, type ActivePage } from '../lib/stores';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HiOutlineCommandLine, HiOutlineLink, HiOutlineDocumentText, HiOutlineBars3, HiOutlineXMark } from 'react-icons/hi2';
-import clsx from 'clsx';
+import { HiOutlineCommandLine, HiOutlineLink, HiOutlineDocumentText, HiOutlineBars3, HiOutlineXMark, HiOutlineSparkles, HiOutlineChevronDoubleLeft } from 'react-icons/hi2';
+import { cn } from '../lib/utils';
+import { Button } from './ui/button';
 
 const navItems: { id: ActivePage; label: string; icon: React.ReactNode }[] = [
   { id: 'prompts', label: 'Prompts', icon: <HiOutlineCommandLine size={20} /> },
   { id: 'links', label: 'Links', icon: <HiOutlineLink size={20} /> },
   { id: 'notes', label: 'Notes', icon: <HiOutlineDocumentText size={20} /> },
+  { id: 'tokenizer', label: 'Tokenizer', icon: <HiOutlineSparkles size={20} /> },
 ];
 
 export default function Sidebar() {
   const activePage = useStore($activePage);
   const sidebarOpen = useStore($sidebarOpen);
+  const desktopSidebarOpen = useStore($desktopSidebarOpen);
 
   const handleNav = (page: ActivePage) => {
     $activePage.set(page);
@@ -23,15 +26,17 @@ export default function Sidebar() {
   return (
     <>
       {/* Mobile header */}
-      <header className="md:hidden fixed top-0 left-0 right-0 z-50 glass px-4 py-3 flex items-center justify-between">
-        <span className="text-lg font-bold tracking-widest text-foreground">SVRZ</span>
-        <button
+      <header className="fixed left-0 right-0 top-0 z-50 flex items-center justify-between border-b border-border bg-card/90 px-4 py-3 backdrop-blur md:hidden">
+        <span className="text-lg font-bold tracking-[0.24em] text-foreground">SVRZ</span>
+        <Button
           onClick={() => $sidebarOpen.set(!sidebarOpen)}
-          className="btn-ghost p-2"
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9"
           aria-label="Toggle menu"
         >
           {sidebarOpen ? <HiOutlineXMark size={22} /> : <HiOutlineBars3 size={22} />}
-        </button>
+        </Button>
       </header>
 
       {/* Mobile overlay */}
@@ -49,40 +54,60 @@ export default function Sidebar() {
 
       {/* Sidebar */}
       <aside
-        className={clsx(
-          'fixed top-0 left-0 z-50 h-screen w-64 bg-surface border-r border-border flex flex-col transition-transform duration-300 ease-in-out',
-          'md:translate-x-0 md:sticky md:top-0 md:z-auto md:shrink-0',
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        className={cn(
+          'fixed left-0 top-0 z-50 flex h-screen flex-col border-r border-border bg-card transition-all duration-300 ease-in-out',
+          'md:sticky md:top-0 md:z-auto md:shrink-0 overflow-hidden',
+          sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full w-64 md:translate-x-0',
+          desktopSidebarOpen ? 'md:w-64' : 'md:w-0 md:border-none md:opacity-0'
         )}
       >
-        {/* Logo */}
-        <div className="px-6 py-6 border-b border-border">
-          <h1 className="text-xl font-bold tracking-[0.3em] text-foreground">SAVERZ</h1>
-          <p className="text-xs text-muted mt-0.5">Smart Archive Vault for Every Resource Zone</p>
-        </div>
-
-        {/* Nav items */}
-        <nav className="flex-1 px-3 py-4 space-y-1">
-          {navItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => handleNav(item.id)}
-              className={clsx(
-                'w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200',
-                activePage === item.id
-                  ? 'bg-accent/15 text-accent border border-accent/20'
-                  : 'text-muted hover:text-foreground hover:bg-surface-hover border border-transparent'
-              )}
+        <div className="w-64 flex flex-col h-full">
+          {/* Logo */}
+          <div className="flex items-center justify-between border-b border-border px-6 py-6 shrink-0">
+            <div>
+              <h1 className="text-xl font-bold tracking-[0.3em] text-foreground">SAVERZ</h1>
+              <p className="mt-0.5 text-xs text-muted-foreground">Smart Archive</p>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => $desktopSidebarOpen.set(false)}
+              className="hidden md:flex h-8 w-8 text-muted-foreground hover:text-foreground shrink-0"
+              aria-label="Close Sidebar"
             >
-              {item.icon}
-              {item.label}
-            </button>
-          ))}
-        </nav>
+              <HiOutlineChevronDoubleLeft size={18} />
+            </Button>
+          </div>
 
-        {/* Footer */}
-        <div className="px-6 py-4 border-t border-border">
-          <p className="text-xs text-muted/50">Local-first • No cloud</p>
+          {/* Nav items */}
+          <nav className="flex-1 space-y-1 px-3 py-4">
+            {navItems.map((item) => (
+              <Button
+                key={item.id}
+                onClick={() => handleNav(item.id)}
+                variant="ghost"
+                className={cn(
+                  'relative h-auto w-full justify-start gap-4 rounded-lg px-4 py-3 text-sm font-medium transition-colors hover:bg-accent/70',
+                  activePage === item.id ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                {activePage === item.id && (
+                  <motion.span
+                    layoutId="active-nav-pill"
+                    className="absolute inset-0 rounded-lg border border-primary/20 bg-primary/15"
+                    transition={{ type: 'spring', stiffness: 340, damping: 30 }}
+                  />
+                )}
+                <span className="relative z-10">{item.icon}</span>
+                <span className="relative z-10">{item.label}</span>
+              </Button>
+            ))}
+          </nav>
+
+          {/* Footer */}
+          <div className="border-t border-border px-6 py-4 shrink-0">
+            <p className="text-xs text-muted-foreground/70">Local-first • No cloud</p>
+          </div>
         </div>
       </aside>
     </>

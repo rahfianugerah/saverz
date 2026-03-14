@@ -3,6 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { HiOutlinePlus, HiOutlineTrash, HiOutlineClipboardDocument, HiOutlineCheck, HiOutlineSparkles } from 'react-icons/hi2';
 import { usePrompts, addPrompt, deletePrompt } from '../lib/hooks';
 import type { Prompt } from '../lib/types';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Textarea } from './ui/textarea';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { ModeSwitch } from './ui/mode-switch';
 
 // ── Dynamic List Input ─────────────────────────────────
 function DynamicList({
@@ -34,65 +39,34 @@ function DynamicList({
             transition={{ duration: 0.2 }}
             className="flex items-center gap-2"
           >
-            <span className="text-muted text-xs w-5 shrink-0 text-center">{index + 1}.</span>
-            <input
-              type="text"
+            <span className="w-5 shrink-0 text-center text-xs text-muted-foreground">{index + 1}.</span>
+            <Input
               value={item}
               onChange={(e) => updateItem(index, e.target.value)}
               placeholder={placeholder}
-              className="input-field flex-1 text-sm"
+              className="h-9 flex-1"
             />
-            <button
+            <Button
               onClick={() => removeItem(index)}
-              className="btn-ghost p-2 text-danger hover:text-danger shrink-0"
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 shrink-0 text-destructive"
               aria-label="Remove item"
             >
               <HiOutlineTrash size={16} />
-            </button>
+            </Button>
           </motion.div>
         ))}
       </AnimatePresence>
-      <button
+      <Button
         onClick={addItem}
-        className="btn-ghost flex items-center gap-1.5 text-sm text-accent hover:text-accent-hover"
+        variant="ghost"
+        size="sm"
+        className="text-primary"
       >
         <HiOutlinePlus size={16} />
         Add item
-      </button>
-    </div>
-  );
-}
-
-// ── Toggle Switch ──────────────────────────────────────
-function ToggleSwitch({
-  value,
-  onChange,
-  labelA,
-  labelB,
-}: {
-  value: boolean;
-  onChange: (v: boolean) => void;
-  labelA: string;
-  labelB: string;
-}) {
-  return (
-    <div className="inline-flex items-center bg-surface border border-border rounded-xl p-1 gap-0.5">
-      <button
-        onClick={() => onChange(false)}
-        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
-          !value ? 'bg-accent text-white' : 'text-muted hover:text-foreground'
-        }`}
-      >
-        {labelA}
-      </button>
-      <button
-        onClick={() => onChange(true)}
-        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
-          value ? 'bg-accent text-white' : 'text-muted hover:text-foreground'
-        }`}
-      >
-        {labelB}
-      </button>
+      </Button>
     </div>
   );
 }
@@ -142,14 +116,14 @@ function PromptPreview({ prompt }: { prompt: { title: string; role: string; task
   if (!formatted) return null;
 
   return (
-    <div className="card mt-6">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-medium text-muted">Preview</h3>
-        <button onClick={handleCopy} className="btn-ghost flex items-center gap-1.5 text-xs">
+    <Card className="mt-6">
+      <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
+        <CardTitle className="text-base">Preview</CardTitle>
+        <Button onClick={handleCopy} variant="ghost" size="sm" className="h-8 gap-1.5 text-xs">
           {copied ? (
             <>
-              <HiOutlineCheck size={14} className="text-success" />
-              <span className="text-success">Copied!</span>
+              <HiOutlineCheck size={14} className="text-primary" />
+              <span className="text-primary">Copied!</span>
             </>
           ) : (
             <>
@@ -157,12 +131,14 @@ function PromptPreview({ prompt }: { prompt: { title: string; role: string; task
               Copy
             </>
           )}
-        </button>
-      </div>
-      <pre className="bg-background border border-border rounded-xl p-4 text-sm text-foreground/90 font-mono whitespace-pre-wrap leading-relaxed overflow-x-auto">
-        {formatted}
-      </pre>
-    </div>
+        </Button>
+      </CardHeader>
+      <CardContent>
+        <pre className="overflow-x-auto rounded-lg border border-border bg-background/80 p-4 font-mono text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap">
+          {formatted}
+        </pre>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -208,22 +184,23 @@ function SavedPromptCard({ prompt, onDelete }: { prompt: Prompt; onDelete: (id: 
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="card"
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <h4 className="font-medium text-foreground truncate">{prompt.title || 'Untitled'}</h4>
-          {prompt.role && <p className="text-xs text-muted mt-1 truncate">Role: {prompt.role}</p>}
-        </div>
-        <div className="flex items-center gap-1 shrink-0">
-          <button onClick={handleCopy} className="btn-ghost p-2" aria-label="Copy prompt">
-            {copied ? <HiOutlineCheck size={16} className="text-success" /> : <HiOutlineClipboardDocument size={16} />}
-          </button>
-          <button onClick={() => prompt.id && onDelete(prompt.id)} className="btn-ghost p-2 text-danger" aria-label="Delete prompt">
-            <HiOutlineTrash size={16} />
-          </button>
-        </div>
-      </div>
+      <Card>
+        <CardContent className="flex items-start justify-between gap-3 p-4">
+          <div className="min-w-0 flex-1">
+            <h4 className="truncate font-medium text-foreground">{prompt.title || 'Untitled'}</h4>
+            {prompt.role && <p className="mt-1 truncate text-xs text-muted-foreground">Role: {prompt.role}</p>}
+          </div>
+          <div className="flex shrink-0 items-center gap-1">
+            <Button onClick={handleCopy} variant="ghost" size="icon" className="h-8 w-8" aria-label="Copy prompt">
+              {copied ? <HiOutlineCheck size={16} className="text-primary" /> : <HiOutlineClipboardDocument size={16} />}
+            </Button>
+            <Button onClick={() => prompt.id && onDelete(prompt.id)} variant="ghost" size="icon" className="h-8 w-8 text-destructive" aria-label="Delete prompt">
+              <HiOutlineTrash size={16} />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </motion.div>
   );
 }
@@ -262,92 +239,111 @@ export default function PromptBuilder() {
   };
 
   return (
-    <div>
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-8">
-        <div className="p-2.5 bg-accent/15 rounded-xl">
-          <HiOutlineSparkles size={22} className="text-accent" />
+      <div className="mb-2 flex items-center gap-3">
+        <div className="rounded-lg border border-border bg-card p-2.5">
+          <HiOutlineSparkles size={22} className="text-primary" />
         </div>
         <div>
-          <h2 className="text-xl font-semibold text-foreground">Prompt Builder</h2>
-          <p className="text-sm text-muted">Create structured LLM prompts from templates</p>
+          <h2 className="text-xl font-semibold">Prompt Builder</h2>
+          <p className="text-sm text-muted-foreground">Create structured LLM prompts from templates</p>
         </div>
       </div>
 
       {/* Form */}
-      <div className="space-y-5">
-        {/* Title & Role */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-medium text-muted mb-1.5">Title</label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Code Review Agent"
-              className="input-field"
-            />
+      <Card>
+        <CardHeader>
+          <CardTitle>Prompt Template</CardTitle>
+          <CardDescription>Define role, task, and constraints before saving.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          {/* Title & Role */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Title</label>
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="e.g. Code Review Agent"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Role</label>
+              <Input
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                placeholder="e.g. Senior Software Engineer"
+              />
+            </div>
           </div>
-          <div>
-            <label className="block text-xs font-medium text-muted mb-1.5">Role</label>
-            <input
-              type="text"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              placeholder="e.g. Senior Software Engineer"
-              className="input-field"
-            />
-          </div>
-        </div>
 
-        {/* Task Section */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="text-xs font-medium text-muted">Task</label>
-            <ToggleSwitch
-              value={taskType === 'list'}
-              onChange={(v) => setTaskType(v ? 'list' : 'textarea')}
-              labelA="Free Write"
-              labelB="List"
-            />
-          </div>
-            {taskType === 'textarea' ? (
-              <div>
-                <textarea
+          {/* Task Section */}
+          <div>
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <label className="text-xs font-medium text-muted-foreground">Task</label>
+              <ModeSwitch
+                value={taskType}
+                onChange={setTaskType}
+                options={[
+                  { value: 'textarea', label: 'Free Write' },
+                  { value: 'list', label: 'List' },
+                ]}
+              />
+            </div>
+
+            <AnimatePresence mode="wait" initial={false}>
+              {taskType === 'textarea' ? (
+                <motion.div
+                  key="textarea"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.18 }}
+                >
+                  <Textarea
                   value={taskContent}
                   onChange={(e) => setTaskContent(e.target.value)}
                   placeholder="Describe the task in detail..."
                   rows={4}
-                  className="textarea-field"
+                  className="resize-none"
                 />
-              </div>
-            ) : (
-              <div>
-                <DynamicList items={taskItems} onChange={setTaskItems} placeholder="Task item..." />
-              </div>
-            )}
-        </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="list"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.18 }}
+                >
+                  <DynamicList items={taskItems} onChange={setTaskItems} placeholder="Task item..." />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
-        {/* Rules Section */}
-        <div>
-          <label className="block text-xs font-medium text-muted mb-2">Rules & Constraints</label>
-          <DynamicList items={rules} onChange={setRules} placeholder="Add a rule..." />
-        </div>
+          {/* Rules Section */}
+          <div>
+            <label className="mb-2 block text-xs font-medium text-muted-foreground">Rules & Constraints</label>
+            <DynamicList items={rules} onChange={setRules} placeholder="Add a rule..." />
+          </div>
 
-        {/* Preview */}
-        <PromptPreview prompt={{ title, role, taskType, taskContent, taskItems, rules }} />
+          {/* Save Button */}
+          <Button onClick={handleSave} disabled={!title.trim()} className="w-full md:w-auto">
+            Save Prompt
+          </Button>
+        </CardContent>
+      </Card>
 
-        {/* Save Button */}
-        <button onClick={handleSave} disabled={!title.trim()} className="btn-primary w-full md:w-auto disabled:opacity-40 disabled:cursor-not-allowed">
-          Save Prompt
-        </button>
-      </div>
+      {/* Preview */}
+      <PromptPreview prompt={{ title, role, taskType, taskContent, taskItems, rules }} />
 
       {/* Saved Prompts */}
       {prompts.length > 0 && (
-        <div className="mt-12">
-          <h3 className="text-sm font-medium text-muted mb-4">Saved Prompts ({prompts.length})</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="mt-2">
+          <h3 className="mb-4 text-sm font-medium text-muted-foreground">Saved Prompts ({prompts.length})</h3>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <AnimatePresence>
               {prompts.map((prompt) => (
                 <SavedPromptCard key={prompt.id} prompt={prompt} onDelete={handleDelete} />

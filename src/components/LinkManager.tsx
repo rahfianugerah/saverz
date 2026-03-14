@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { HiOutlinePlus, HiOutlineTrash, HiOutlineLink, HiOutlineArrowTopRightOnSquare } from 'react-icons/hi2';
 import { useLinks, addLink, deleteLink } from '../lib/hooks';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 
 // ── Link Card ──────────────────────────────────────────
 function LinkCard({ link, onDelete }: { link: { id?: number; name: string; url: string }; onDelete: (id: number) => void }) {
@@ -14,40 +17,46 @@ function LinkCard({ link, onDelete }: { link: { id?: number; name: string; url: 
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.2 }}
-      className="card group flex items-center gap-4"
+      className="group"
     >
-      <div className="w-10 h-10 rounded-xl bg-background border border-border flex items-center justify-center shrink-0 overflow-hidden">
-        <img
-          src={faviconUrl}
-          alt=""
-          className="w-5 h-5"
-          onError={(e) => {
-            (e.target as HTMLImageElement).style.display = 'none';
-          }}
-        />
-      </div>
-      <div className="min-w-0 flex-1">
-        <h4 className="font-medium text-foreground text-sm truncate">{link.name}</h4>
-        <p className="text-xs text-muted truncate">{link.url}</p>
-      </div>
-      <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-        <a
-          href={link.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn-ghost p-2"
-          aria-label="Open link"
-        >
-          <HiOutlineArrowTopRightOnSquare size={16} />
-        </a>
-        <button
-          onClick={() => link.id && onDelete(link.id)}
-          className="btn-ghost p-2 text-danger"
-          aria-label="Delete link"
-        >
-          <HiOutlineTrash size={16} />
-        </button>
-      </div>
+      <Card>
+        <CardContent className="flex items-center gap-4 p-4">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-background">
+            <img
+              src={faviconUrl}
+              alt=""
+              className="h-5 w-5"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
+            />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h4 className="truncate text-sm font-medium text-foreground">{link.name}</h4>
+            <p className="truncate text-xs text-muted-foreground">{link.url}</p>
+          </div>
+          <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+            <Button
+              onClick={() => window.open(link.url, '_blank', 'noopener,noreferrer')}
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              aria-label="Open link"
+            >
+              <HiOutlineArrowTopRightOnSquare size={16} />
+            </Button>
+            <Button
+              onClick={() => link.id && onDelete(link.id)}
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-destructive"
+              aria-label="Delete link"
+            >
+              <HiOutlineTrash size={16} />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </motion.div>
   );
 }
@@ -96,60 +105,64 @@ export default function LinkManager() {
   };
 
   return (
-    <div>
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-8">
-        <div className="p-2.5 bg-accent/15 rounded-xl">
-          <HiOutlineLink size={22} className="text-accent" />
+      <div className="mb-2 flex items-center gap-3">
+        <div className="rounded-lg border border-border bg-card p-2.5">
+          <HiOutlineLink size={22} className="text-primary" />
         </div>
         <div>
-          <h2 className="text-xl font-semibold text-foreground">Link Manager</h2>
-          <p className="text-sm text-muted">Save and organize your bookmarks</p>
+          <h2 className="text-xl font-semibold">Link Manager</h2>
+          <p className="text-sm text-muted-foreground">Save and organize your bookmarks</p>
         </div>
       </div>
 
       {/* Add form */}
-      <div className="card mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_2fr_auto] gap-3 items-end">
-          <div>
-            <label className="block text-xs font-medium text-muted mb-1.5">Name</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="GitHub"
-              className="input-field text-sm"
-            />
+      <Card>
+        <CardHeader>
+          <CardTitle>Add Link</CardTitle>
+          <CardDescription>Store quick access links locally on your browser.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 items-end gap-3 md:grid-cols-[1fr_2fr_auto]">
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Name</label>
+              <Input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="GitHub"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-muted-foreground">URL</label>
+              <Input
+                type="url"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="https://github.com"
+              />
+            </div>
+            <Button onClick={handleAdd} className="flex items-center justify-center gap-1.5 md:w-28">
+              <HiOutlinePlus size={18} />
+              <span>Add</span>
+            </Button>
           </div>
-          <div>
-            <label className="block text-xs font-medium text-muted mb-1.5">URL</label>
-            <input
-              type="url"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="https://github.com"
-              className="input-field text-sm"
-            />
-          </div>
-          <button onClick={handleAdd} className="btn-primary flex items-center justify-center gap-1.5 h-[42px]">
-            <HiOutlinePlus size={18} />
-            <span className="md:hidden lg:inline">Add</span>
-          </button>
-        </div>
-        {error && <p className="text-xs text-danger mt-2">{error}</p>}
-      </div>
+          {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
+        </CardContent>
+      </Card>
 
       {/* Links grid */}
       {links.length === 0 ? (
-        <div className="text-center py-16">
-          <HiOutlineLink size={40} className="text-muted/30 mx-auto mb-3" />
-          <p className="text-muted text-sm">No links saved yet</p>
-          <p className="text-muted/60 text-xs mt-1">Add your first bookmark above</p>
+        <div className="py-16 text-center">
+          <HiOutlineLink size={40} className="mx-auto mb-3 text-muted-foreground/30" />
+          <p className="text-sm text-muted-foreground">No links saved yet</p>
+          <p className="mt-1 text-xs text-muted-foreground/70">Add your first bookmark above</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <AnimatePresence>
             {links.map((link) => (
               <LinkCard key={link.id} link={link} onDelete={handleDelete} />
