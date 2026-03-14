@@ -1,6 +1,6 @@
 import React from 'react';
 import { useStore } from '@nanostores/react';
-import { $activePage, $desktopSidebarOpen, $sidebarOpen, type ActivePage } from '../lib/stores';
+import { $activePage, $sidebarOpen, type ActivePage } from '../lib/stores';
 import {
   HiOutlineBars3,
   HiOutlineCodeBracket,
@@ -10,6 +10,7 @@ import {
   HiOutlineLink,
   HiOutlineLockClosed,
   HiOutlineSparkles,
+  HiOutlineXMark,
 } from 'react-icons/hi2';
 import { cn } from '../lib/utils';
 import { Button } from './ui/button';
@@ -24,35 +25,9 @@ const navItems: { id: ActivePage; label: string; icon: React.ReactNode }[] = [
   { id: 'tokenizer', label: 'Tokenizer', icon: <HiOutlineSparkles size={20} /> },
 ];
 
-function HamburgerIcon({ open, className }: { open: boolean; className?: string }) {
-  return (
-    <span className={cn('relative block h-4 w-5', className)} aria-hidden="true">
-      <span
-        className={cn(
-          'absolute left-0 top-0 block h-0.5 w-5 rounded-full bg-current transition-transform duration-200',
-          open && 'translate-y-[7px] rotate-45'
-        )}
-      />
-      <span
-        className={cn(
-          'absolute left-0 top-[7px] block h-0.5 w-5 rounded-full bg-current transition-opacity duration-200',
-          open ? 'opacity-0' : 'opacity-100'
-        )}
-      />
-      <span
-        className={cn(
-          'absolute bottom-0 left-0 block h-0.5 w-5 rounded-full bg-current transition-transform duration-200',
-          open && '-translate-y-[7px] -rotate-45'
-        )}
-      />
-    </span>
-  );
-}
-
 export default function Sidebar() {
   const activePage = useStore($activePage);
   const sidebarOpen = useStore($sidebarOpen);
-  const desktopSidebarOpen = useStore($desktopSidebarOpen);
 
   const handleNav = (page: ActivePage) => {
     $activePage.set(page);
@@ -70,7 +45,7 @@ export default function Sidebar() {
           className="h-9 w-9"
           aria-label="Toggle menu"
         >
-          <HamburgerIcon open={sidebarOpen} />
+          {sidebarOpen ? <HiOutlineXMark size={22} /> : <HiOutlineBars3 size={22} />}
         </Button>
       </header>
 
@@ -78,10 +53,9 @@ export default function Sidebar() {
 
       <aside
         className={cn(
-          'fixed left-0 top-0 z-50 flex h-screen flex-col overflow-hidden border-border bg-card transition-transform duration-200',
-          'md:sticky md:top-0 md:z-auto md:shrink-0',
-          sidebarOpen ? 'translate-x-0 w-64 border-r' : '-translate-x-full w-64 md:translate-x-0',
-          desktopSidebarOpen ? 'md:w-64 md:border-r md:pointer-events-auto' : 'md:w-0 md:border-transparent md:pointer-events-none'
+          'fixed left-0 top-0 z-50 flex h-screen w-64 flex-col overflow-hidden border-r border-border bg-card transition-transform duration-200',
+          'md:sticky md:top-0 md:z-auto md:shrink-0 md:translate-x-0',
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
         <div className="w-64 h-full flex flex-col">
@@ -90,15 +64,6 @@ export default function Sidebar() {
               <h1 className="text-xl font-bold tracking-[0.24em] text-foreground">SAVERZ</h1>
               <p className="mt-0.5 text-xs text-muted-foreground">Smart Archive Vault for Every Resource Zone</p>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => $desktopSidebarOpen.set(false)}
-              className="hidden h-8 w-8 text-muted-foreground hover:text-foreground md:flex"
-              aria-label="Close Sidebar"
-            >
-              <HamburgerIcon open={desktopSidebarOpen} className="h-3.5 w-4" />
-            </Button>
           </div>
 
           <nav className="flex-1 space-y-1 px-3 py-4">

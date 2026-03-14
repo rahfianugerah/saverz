@@ -20,7 +20,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import type { PasswordEntry, VaultRecord } from '../lib/types';
-import { createVault, getPrimaryVaultRecord, saveVaultEntries, unlockVault } from '../lib/passwordVault';
+import { createVault, getPrimaryVaultRecord, resetVault, saveVaultEntries, unlockVault } from '../lib/passwordVault';
 import { cn } from '../lib/utils';
 
 type VaultStatus = 'checking' | 'setup' | 'locked' | 'unlocked';
@@ -28,6 +28,7 @@ type VaultStatus = 'checking' | 'setup' | 'locked' | 'unlocked';
 interface EntryFormState {
   accountName: string;
   username: string;
+  email: string;
   password: string;
   url: string;
   notes: string;
@@ -36,6 +37,7 @@ interface EntryFormState {
 const emptyForm: EntryFormState = {
   accountName: '',
   username: '',
+  email: '',
   password: '',
   url: '',
   notes: '',
@@ -47,12 +49,17 @@ function sortEntries(entries: PasswordEntry[]) {
 
 function normalizeEntry(entry: Partial<PasswordEntry> & { id: string }): PasswordEntry {
   const accountName = (entry.accountName ?? entry.label ?? '').trim() || 'Untitled Account';
+  const legacyUsername = (entry.username ?? '').trim();
+  const hasExplicitEmail = typeof entry.email === 'string' && entry.email.trim().length > 0;
+  const derivedEmail = hasExplicitEmail ? (entry.email ?? '').trim() : (legacyUsername.includes('@') ? legacyUsername : '');
+  const derivedUsername = hasExplicitEmail ? legacyUsername : (legacyUsername.includes('@') ? '' : legacyUsername);
 
   return {
     id: entry.id,
     accountName,
     label: accountName,
-    username: entry.username ?? '',
+    username: derivedUsername,
+    email: derivedEmail,
     password: entry.password ?? '',
     url: entry.url ?? '',
     notes: entry.notes ?? '',
@@ -83,6 +90,7 @@ export default function PasswordVault() {
   const [showFormPassword, setShowFormPassword] = useState(false);
   const [visiblePasswords, setVisiblePasswords] = useState<Set<string>>(new Set());
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [confirmReset, setConfirmReset] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -135,8 +143,38 @@ export default function PasswordVault() {
     setEditingId(null);
     setForm(emptyForm);
     setShowFormPassword(false);
+    setConfirmReset(false);
     clearVolatileSecrets();
     setStatus('locked');
+  };
+
+  const handleResetVault = async () => {
+    if (busy) return;
+
+    setBusy(true);
+    setError('');
+
+    try {
+      await resetVault();
+      setSessionKey(null);
+      keyRef.current = null;
+      setRecord(null);
+      recordRef.current = null;
+      setEntries([]);
+      setExpandedId(null);
+      setVisiblePasswords(new Set());
+      setEditingId(null);
+      setForm(emptyForm);
+      setShowFormPassword(false);
+      setConfirmReset(false);
+      clearVolatileSecrets();
+      setStatus('setup');
+    } catch (unknownError) {
+      const message = unknownError instanceof Error ? unknownError.message : 'Unable to reset vault.';
+      setError(message);
+    } finally {
+      setBusy(false);
+    }
   };
 
   const persistEntries = async (nextEntries: PasswordEntry[]) => {
@@ -230,8 +268,10 @@ export default function PasswordVault() {
   const handleSaveEntry = async () => {
     if (busy) return;
 
-    if (!form.accountName.trim()) {
-      setError('Account Name is required.');
+    const normalizedAccountName = form.accountName.trim() || form.username.trim() || form.email.trim();
+
+    if (!normalizedAccountName) {
+      setError('Account Name or Username is required.');
       return;
     }
 
@@ -245,9 +285,10 @@ export default function PasswordVault() {
 
     const nextEntry: PasswordEntry = {
       id: editingId ?? crypto.randomUUID(),
-      accountName: form.accountName.trim(),
-      label: form.accountName.trim(),
+      accountName: normalizedAccountName,
+      label: normalizedAccountName,
       username: form.username.trim(),
+      email: form.email.trim(),
       password: form.password,
       url: form.url.trim(),
       notes: form.notes.trim(),
@@ -298,6 +339,7 @@ export default function PasswordVault() {
     setForm({
       accountName: entry.accountName,
       username: entry.username,
+      email: entry.email,
       password: entry.password,
       url: entry.url,
       notes: entry.notes,
@@ -403,7 +445,9 @@ export default function PasswordVault() {
         <Card>
           <CardHeader>
             <CardTitle>Unlock Vault</CardTitle>
-            <CardDescription>Decrypt your local vault with the master password.</CardDescription>
+            <CardDescription>
+              Decrypt your local vault with the master password. If you forgot it, the only recovery option is to reset and erase the vault.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -419,6 +463,34 @@ export default function PasswordVault() {
               <HiOutlineLockOpen size={16} />
               {busy ? 'Unlocking...' : 'Unlock Vault'}
             </Button>
+
+            <div className="border-t border-border pt-4">
+              {!confirmReset ? (
+                <Button
+                  onClick={() => setConfirmReset(true)}
+                  variant="ghost"
+                  className="gap-1.5 text-destructive"
+                  disabled={busy}
+                >
+                  <HiOutlineTrash size={16} />
+                  Forgot Password? Reset Vault
+                </Button>
+              ) : (
+                <div className="space-y-3 rounded-lg border border-destructive/30 bg-destructive/10 p-3">
+                  <p className="text-xs text-destructive">
+                    Reset will permanently erase all vault entries. This action cannot be undone.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button onClick={handleResetVault} variant="destructive" size="sm" disabled={busy}>
+                      Confirm Reset and Erase Vault
+                    </Button>
+                    <Button onClick={() => setConfirmReset(false)} variant="ghost" size="sm" disabled={busy}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       )}
@@ -447,7 +519,16 @@ export default function PasswordVault() {
                   <Input
                     value={form.username}
                     onChange={(event) => setForm((previous) => ({ ...previous, username: event.target.value }))}
-                    placeholder="username or email"
+                    placeholder="john_doe"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Email</label>
+                  <Input
+                    type="email"
+                    value={form.email}
+                    onChange={(event) => setForm((previous) => ({ ...previous, email: event.target.value }))}
+                    placeholder="john@example.com"
                   />
                 </div>
                 <div>
@@ -530,7 +611,9 @@ export default function PasswordVault() {
                           <div className="min-w-0">
                             <p className="truncate text-sm font-medium text-foreground">{entry.accountName}</p>
                             <p className="truncate text-xs text-muted-foreground">
-                              {entry.username || 'No username'}
+                              {entry.username && entry.email
+                                ? `${entry.username} | ${entry.email}`
+                                : entry.username || entry.email || 'No username/email'}
                             </p>
                           </div>
                           <HiOutlineChevronDown
@@ -549,6 +632,10 @@ export default function PasswordVault() {
                               <div>
                                 <p className="text-[11px] uppercase tracking-wide text-muted-foreground/80">Username</p>
                                 <p className="text-sm text-foreground/90">{entry.username || '-'}</p>
+                              </div>
+                              <div>
+                                <p className="text-[11px] uppercase tracking-wide text-muted-foreground/80">Email</p>
+                                <p className="text-sm text-foreground/90">{entry.email || '-'}</p>
                               </div>
                               <div>
                                 <p className="text-[11px] uppercase tracking-wide text-muted-foreground/80">URL</p>

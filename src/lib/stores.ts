@@ -11,4 +11,3 @@ export type ActivePage =
 
 export const $activePage = atom<ActivePage>('prompts');
 export const $sidebarOpen = atom<boolean>(false);
-export const $desktopSidebarOpen = atom<boolean>(true);

@@ -6,6 +6,9 @@ const KDF_TIME_COST = 3;
 const KDF_MEMORY_COST = 65536;
 const KDF_PARALLELISM = 1;
 const KDF_HASH_LENGTH = 32;
+const PBKDF2_ITERATIONS = 210000;
+
+type VaultKdf = VaultRecord['kdf'];
 
 function toBase64(bytes: Uint8Array) {
   let binary = '';
@@ -30,23 +33,55 @@ function toStrictArrayBuffer(bytes: Uint8Array): ArrayBuffer {
   return copy.buffer;
 }
 
-async function argon2Hash(masterPassword: string, salt: Uint8Array): Promise<Uint8Array> {
-  // argon2-browser ships without stable TS declarations in this setup.
-  const moduleRef = (await import('argon2-browser')) as unknown as {
+interface Argon2ModuleRef {
+  hash?: (options: Record<string, unknown>) => Promise<{ hash: Uint8Array | ArrayBuffer }>;
+  ArgonType?: { Argon2id: number };
+  default?: {
     hash?: (options: Record<string, unknown>) => Promise<{ hash: Uint8Array | ArrayBuffer }>;
     ArgonType?: { Argon2id: number };
-    default?: {
-      hash?: (options: Record<string, unknown>) => Promise<{ hash: Uint8Array | ArrayBuffer }>;
-      ArgonType?: { Argon2id: number };
-    };
+  };
+}
+
+async function loadArgon2() {
+  const tryMain = async () => {
+    const moduleRef = (await import('argon2-browser')) as unknown as Argon2ModuleRef;
+    const hashFn = moduleRef.hash ?? moduleRef.default?.hash;
+    const argonType = moduleRef.ArgonType?.Argon2id ?? moduleRef.default?.ArgonType?.Argon2id ?? 2;
+
+    if (!hashFn) {
+      throw new Error('argon2-browser main entry has no hash() function.');
+    }
+
+    return { hashFn, argonType };
   };
 
-  const hashFn = moduleRef.hash ?? moduleRef.default?.hash;
-  const argonType = moduleRef.ArgonType?.Argon2id ?? moduleRef.default?.ArgonType?.Argon2id ?? 2;
+  const tryBundled = async () => {
+    // Fallback bundled build because some Vite/WASM setups fail on package main entry.
+    const bundledRef = (await import('argon2-browser/dist/argon2-bundled.min.js')) as unknown as Argon2ModuleRef;
+    const globalArgon2 = (globalThis as unknown as { argon2?: Argon2ModuleRef }).argon2;
 
-  if (!hashFn) {
-    throw new Error('Argon2 module could not be loaded.');
+    const hashFn = bundledRef.hash ?? bundledRef.default?.hash ?? globalArgon2?.hash;
+    const argonType = bundledRef.ArgonType?.Argon2id
+      ?? bundledRef.default?.ArgonType?.Argon2id
+      ?? globalArgon2?.ArgonType?.Argon2id
+      ?? 2;
+
+    if (!hashFn) {
+      throw new Error('argon2-browser bundled entry has no hash() function.');
+    }
+
+    return { hashFn, argonType };
+  };
+
+  try {
+    return await tryMain();
+  } catch {
+    return tryBundled();
   }
+}
+
+async function argon2Hash(masterPassword: string, salt: Uint8Array): Promise<Uint8Array> {
+  const { hashFn, argonType } = await loadArgon2();
 
   const result = await hashFn({
     pass: masterPassword,
@@ -62,9 +97,51 @@ async function argon2Hash(masterPassword: string, salt: Uint8Array): Promise<Uin
   return hash instanceof Uint8Array ? hash : new Uint8Array(hash);
 }
 
-async function deriveAesKey(masterPassword: string, salt: Uint8Array): Promise<CryptoKey> {
-  const derived = await argon2Hash(masterPassword, salt);
-  return crypto.subtle.importKey('raw', toStrictArrayBuffer(derived), { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+async function pbkdf2Hash(masterPassword: string, salt: Uint8Array): Promise<Uint8Array> {
+  const material = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(masterPassword),
+    { name: 'PBKDF2' },
+    false,
+    ['deriveBits']
+  );
+
+  const bits = await crypto.subtle.deriveBits(
+    {
+      name: 'PBKDF2',
+      hash: 'SHA-256',
+      salt: toStrictArrayBuffer(salt),
+      iterations: PBKDF2_ITERATIONS,
+    },
+    material,
+    256
+  );
+
+  return new Uint8Array(bits);
+}
+
+async function importAesKey(rawKey: Uint8Array): Promise<CryptoKey> {
+  return crypto.subtle.importKey('raw', toStrictArrayBuffer(rawKey), { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+}
+
+async function deriveAesKey(masterPassword: string, salt: Uint8Array, kdf: VaultKdf, allowFallback: boolean): Promise<{ key: CryptoKey; kdf: VaultKdf }> {
+  if (kdf === 'pbkdf2-sha256') {
+    const derived = await pbkdf2Hash(masterPassword, salt);
+    return { key: await importAesKey(derived), kdf: 'pbkdf2-sha256' };
+  }
+
+  try {
+    const derived = await argon2Hash(masterPassword, salt);
+    return { key: await importAesKey(derived), kdf: 'argon2id' };
+  } catch (unknownError) {
+    if (!allowFallback) {
+      const message = unknownError instanceof Error ? unknownError.message : 'Unknown Argon2 failure.';
+      throw new Error(`Argon2 engine is unavailable: ${message}`);
+    }
+
+    const derived = await pbkdf2Hash(masterPassword, salt);
+    return { key: await importAesKey(derived), kdf: 'pbkdf2-sha256' };
+  }
 }
 
 async function encryptPayload(key: CryptoKey, payload: VaultPayload) {
@@ -103,7 +180,8 @@ export async function createVault(masterPassword: string) {
   }
 
   const salt = crypto.getRandomValues(new Uint8Array(16));
-  const key = await deriveAesKey(masterPassword, salt);
+  const derived = await deriveAesKey(masterPassword, salt, 'argon2id', true);
+  const key = derived.key;
 
   const initialPayload: VaultPayload = {
     schemaVersion: 1,
@@ -116,7 +194,7 @@ export async function createVault(masterPassword: string) {
   const record: VaultRecord = {
     id: PRIMARY_VAULT_ID,
     version: 1,
-    kdf: 'argon2id',
+    kdf: derived.kdf,
     salt: toBase64(salt),
     iv: encrypted.iv,
     ciphertext: encrypted.ciphertext,
@@ -134,12 +212,16 @@ export async function unlockVault(masterPassword: string) {
     throw new Error('Vault is not initialized.');
   }
 
-  const key = await deriveAesKey(masterPassword, fromBase64(record.salt));
+  const currentKdf: VaultKdf = record.kdf ?? 'argon2id';
+  const key = (await deriveAesKey(masterPassword, fromBase64(record.salt), currentKdf, false)).key;
 
   try {
     const payload = await decryptPayload(key, record.iv, record.ciphertext);
     return { key, record, payload };
-  } catch {
+  } catch (unknownError) {
+    if (unknownError instanceof Error && unknownError.message.startsWith('Argon2 engine is unavailable:')) {
+      throw unknownError;
+    }
     throw new Error('Failed to unlock vault. Master password may be incorrect.');
   }
 }
@@ -160,4 +242,8 @@ export async function saveVaultEntries(key: CryptoKey, record: VaultRecord, entr
 
   await db.vaults.put(nextRecord);
   return nextRecord;
+}
+
+export async function resetVault() {
+  await db.vaults.clear();
 }

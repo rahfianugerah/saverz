@@ -27,6 +27,7 @@ export interface PasswordEntry {
   id: string;
   accountName: string;
   username: string;
+  email: string;
   password: string;
   url: string;
   notes: string;
@@ -43,7 +44,7 @@ export interface VaultPayload {
 export interface VaultRecord {
   id: string;
   version: number;
-  kdf: 'argon2id';
+  kdf: 'argon2id' | 'pbkdf2-sha256';
   salt: string;
   iv: string;
   ciphertext: string;
