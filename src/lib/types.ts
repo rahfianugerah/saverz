@@ -22,3 +22,30 @@ export interface Note {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface PasswordEntry {
+  id: string;
+  label: string;
+  username: string;
+  password: string;
+  url: string;
+  notes: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface VaultPayload {
+  schemaVersion: number;
+  entries: PasswordEntry[];
+}
+
+export interface VaultRecord {
+  id: string;
+  version: number;
+  kdf: 'argon2id';
+  salt: string;
+  iv: string;
+  ciphertext: string;
+  createdAt: Date;
+  updatedAt: Date;
+}

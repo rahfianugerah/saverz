@@ -2,15 +2,29 @@ import React from 'react';
 import { useStore } from '@nanostores/react';
 import { $activePage, $sidebarOpen, $desktopSidebarOpen, type ActivePage } from '../lib/stores';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HiOutlineCommandLine, HiOutlineLink, HiOutlineDocumentText, HiOutlineBars3, HiOutlineXMark, HiOutlineSparkles, HiOutlineChevronDoubleLeft } from 'react-icons/hi2';
+import {
+  HiOutlineCommandLine,
+  HiOutlineLink,
+  HiOutlineDocumentText,
+  HiOutlineBars3,
+  HiOutlineXMark,
+  HiOutlineSparkles,
+  HiOutlineChevronDoubleLeft,
+  HiOutlineCodeBracket,
+  HiOutlineCubeTransparent,
+  HiOutlineLockClosed,
+} from 'react-icons/hi2';
 import { cn } from '../lib/utils';
 import { Button } from './ui/button';
 
 const navItems: { id: ActivePage; label: string; icon: React.ReactNode }[] = [
   { id: 'prompts', label: 'Prompts', icon: <HiOutlineCommandLine size={20} /> },
+  { id: 'data-formatter', label: 'Data Formatter', icon: <HiOutlineCodeBracket size={20} /> },
+  { id: 'toon-formatter', label: 'TOON Formatter', icon: <HiOutlineCubeTransparent size={20} /> },
   { id: 'links', label: 'Links', icon: <HiOutlineLink size={20} /> },
   { id: 'notes', label: 'Notes', icon: <HiOutlineDocumentText size={20} /> },
   { id: 'tokenizer', label: 'Tokenizer', icon: <HiOutlineSparkles size={20} /> },
+  { id: 'password-vault', label: 'Password Vault', icon: <HiOutlineLockClosed size={20} /> },
 ];
 
 export default function Sidebar() {

@@ -1,11 +1,14 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useStore } from '@nanostores/react';
-import { $activePage, $desktopSidebarOpen, $sidebarOpen } from '../lib/stores';
+import { $activePage, $desktopSidebarOpen } from '../lib/stores';
 import Sidebar from './Sidebar';
 import PromptBuilder from './PromptBuilder';
 import LinkManager from './LinkManager';
 import NoteManager from './NoteManager';
 import Tokenizer from './Tokenizer';
+import DataFormatter from './DataFormatter';
+import ToonFormatter from './ToonFormatter';
+import PasswordVault from './PasswordVault';
 import { AnimatePresence, motion } from 'framer-motion';
 import { HiOutlineBars3 } from 'react-icons/hi2';
 import { Button } from './ui/button';
@@ -46,9 +49,12 @@ export default function AppShell() {
               transition={{ duration: 0.2, ease: 'easeOut' }}
             >
               {activePage === 'prompts' && <PromptBuilder />}
+              {activePage === 'data-formatter' && <DataFormatter />}
+              {activePage === 'toon-formatter' && <ToonFormatter />}
               {activePage === 'links' && <LinkManager />}
               {activePage === 'notes' && <NoteManager />}
               {activePage === 'tokenizer' && <Tokenizer />}
+              {activePage === 'password-vault' && <PasswordVault />}
             </motion.div>
           </AnimatePresence>
         </div>
