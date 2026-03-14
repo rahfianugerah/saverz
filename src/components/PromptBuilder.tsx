@@ -4,6 +4,7 @@ import { usePrompts, addPrompt, deletePrompt, updatePrompt } from '../lib/hooks'
 import type { Prompt } from '../lib/types';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
+import { Select, type SelectOption } from './ui/select';
 import { Textarea } from './ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { ModeSwitch } from './ui/mode-switch';
@@ -366,6 +367,17 @@ export default function PromptBuilder() {
     setVariables((current) => ({ ...current, [name]: value }));
   }, []);
 
+  const templateOptions = useMemo<SelectOption<string>[]>(
+    () => [
+      { value: '', label: 'Create New Template' },
+      ...prompts.map((prompt) => ({
+        value: String(prompt.id ?? ''),
+        label: prompt.title || 'Untitled',
+      })),
+    ],
+    [prompts]
+  );
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -390,19 +402,13 @@ export default function PromptBuilder() {
             <label htmlFor="template-select" className="mb-1.5 block text-xs font-medium text-muted-foreground">
               Saved Templates
             </label>
-            <select
+            <Select
               id="template-select"
-              value={selectedTemplateId ?? ''}
-              onChange={(event) => handleTemplateSelect(event.target.value)}
+              value={String(selectedTemplateId ?? '')}
+              onChange={handleTemplateSelect}
+              options={templateOptions}
               className="w-full"
-            >
-              <option value="">Create New Template</option>
-              {prompts.map((prompt) => (
-                <option key={prompt.id} value={prompt.id}>
-                  {prompt.title || 'Untitled'}
-                </option>
-              ))}
-            </select>
+            />
           </div>
 
           {/* Title & Role */}

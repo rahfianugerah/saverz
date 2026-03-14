@@ -21,10 +21,10 @@ const navItems: { id: ActivePage; label: string; icon: React.ReactNode }[] = [
   { id: 'api-endpoint-architect', label: 'API Endpoint Architect', icon: <HiOutlineArrowTopRightOnSquare size={20} /> },
   { id: 'credential-vault', label: 'Credential Vault', icon: <HiOutlineKey size={20} /> },
   { id: 'data-formatter', label: 'Data Formatter', icon: <HiOutlineCodeBracket size={20} /> },
-  { id: 'links', label: 'Links', icon: <HiOutlineLink size={20} /> },
-  { id: 'notes', label: 'Notes', icon: <HiOutlineDocumentText size={20} /> },
+  { id: 'links', label: 'Links Saver', icon: <HiOutlineLink size={20} /> },
+  { id: 'notes', label: 'Notes Taker', icon: <HiOutlineDocumentText size={20} /> },
   { id: 'password-vault', label: 'Password Vault', icon: <HiOutlineLockClosed size={20} /> },
-  { id: 'prompts', label: 'Prompts', icon: <HiOutlineCommandLine size={20} /> },
+  { id: 'prompts', label: 'Prompt Builder', icon: <HiOutlineCommandLine size={20} /> },
   { id: 'sql-formatter', label: 'SQL Formatter', icon: <HiOutlineCodeBracket size={20} /> },
   { id: 'toon-formatter', label: 'TOON Formatter', icon: <HiOutlineCubeTransparent size={20} /> },
   { id: 'tokenizer', label: 'Tokenizer', icon: <HiOutlineSparkles size={20} /> },
@@ -65,9 +65,9 @@ export default function Sidebar() {
       >
         <div className="w-64 h-full flex flex-col">
           <div className="flex items-center justify-between border-b border-border px-6 py-6">
-            <div>
-              <h1 className="text-xl font-bold tracking-[0.24em] text-foreground">SAVERZ</h1>
-              <p className="mt-0.5 text-xs text-muted-foreground">Smart Archive Vault for Every Resource Zone</p>
+            <div className="flex w-full flex-col items-center justify-center text-center">
+              <img src="/saverz-light.svg" alt="Saverz" height={50} width={50} />
+              <h1 className="mt-2 text-xl font-bold tracking-[0.24em] text-foreground">SAVERZ</h1>
             </div>
           </div>
 

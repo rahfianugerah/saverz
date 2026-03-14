@@ -19,6 +19,7 @@ import {
   parseStructuredInput,
   type StructuredInputMode,
 } from '../lib/dataFormatter';
+import { Select, type SelectOption } from './ui/select';
 
 interface JsonToken {
   text: string;
@@ -79,6 +80,15 @@ type FormatterActionId =
   | 'minify-xml'
   | 'json-to-xml'
   | 'xml-to-json';
+
+const structuredModeOptions: SelectOption<StructuredInputMode>[] = [
+  { value: 'auto', label: 'Auto Detect' },
+  { value: 'csv', label: 'CSV' },
+  { value: 'tsv', label: 'TSV' },
+  { value: 'ndjson', label: 'NDJSON' },
+  { value: 'kv', label: 'Key Value Lines' },
+  { value: 'logs', label: 'Log Lines' },
+];
 
 export default function DataFormatter() {
   const [input, setInput] = useState('');
@@ -157,18 +167,12 @@ export default function DataFormatter() {
                 <label htmlFor="structured-mode" className="mb-1.5 block text-xs font-medium text-muted-foreground">
                   Structured Parser Mode
                 </label>
-                <select
+                <Select
                   id="structured-mode"
                   value={structuredMode}
-                  onChange={(event) => setStructuredMode(event.target.value as StructuredInputMode)}
-                >
-                  <option value="auto">Auto Detect</option>
-                  <option value="csv">CSV</option>
-                  <option value="tsv">TSV</option>
-                  <option value="ndjson">NDJSON</option>
-                  <option value="kv">Key Value Lines</option>
-                  <option value="logs">Log Lines</option>
-                </select>
+                  options={structuredModeOptions}
+                  onChange={setStructuredMode}
+                />
               </div>
               <div>
                 <label htmlFor="xml-root" className="mb-1.5 block text-xs font-medium text-muted-foreground">

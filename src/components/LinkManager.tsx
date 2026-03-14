@@ -1,27 +1,68 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { HiOutlinePlus, HiOutlineTrash, HiOutlineLink, HiOutlineArrowTopRightOnSquare } from 'react-icons/hi2';
 import { useLinks, addLink, deleteLink } from '../lib/hooks';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 
+const FAVICON_REFRESH_KEY = new Date().toISOString().slice(0, 10);
+
+function getFaviconSources(rawUrl: string) {
+  try {
+    const parsed = new URL(rawUrl);
+    const origin = parsed.origin;
+    const hostname = parsed.hostname;
+
+    return [
+      `${origin}/favicon.svg?v=${FAVICON_REFRESH_KEY}`,
+      `${origin}/favicon.ico?v=${FAVICON_REFRESH_KEY}`,
+      `https://icons.duckduckgo.com/ip3/${encodeURIComponent(hostname)}.ico?v=${FAVICON_REFRESH_KEY}`,
+      `https://www.google.com/s2/favicons?sz=64&domain_url=${encodeURIComponent(origin)}&v=${FAVICON_REFRESH_KEY}`,
+    ];
+  } catch {
+    return [];
+  }
+}
+
 // Link Card
 function LinkCard({ link, onDelete }: { link: { id?: number; name: string; url: string }; onDelete: (id: number) => void }) {
-  const faviconUrl = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(new URL(link.url).hostname)}&sz=32`;
+  const faviconSources = useMemo(() => getFaviconSources(link.url), [link.url]);
+  const [faviconIndex, setFaviconIndex] = useState(0);
+  const [faviconFailed, setFaviconFailed] = useState(false);
+
+  useEffect(() => {
+    setFaviconIndex(0);
+    setFaviconFailed(false);
+  }, [link.url]);
+
+  const currentFavicon = faviconSources[faviconIndex];
+
+  const handleFaviconError = () => {
+    if (faviconIndex < faviconSources.length - 1) {
+      setFaviconIndex((current) => current + 1);
+      return;
+    }
+
+    setFaviconFailed(true);
+  };
 
   return (
     <div className="group">
       <Card>
         <CardContent className="flex items-center gap-4 p-4">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-background">
-            <img
-              src={faviconUrl}
-              alt=""
-              className="h-5 w-5"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = 'none';
-              }}
-            />
+            {!faviconFailed && currentFavicon ? (
+              <img
+                src={currentFavicon}
+                alt=""
+                className="h-5 w-5"
+                loading="lazy"
+                onLoad={() => setFaviconFailed(false)}
+                onError={handleFaviconError}
+              />
+            ) : (
+              <HiOutlineLink size={16} className="text-muted-foreground" />
+            )}
           </div>
           <div className="min-w-0 flex-1">
             <h4 className="truncate text-sm font-medium text-foreground">{link.name}</h4>

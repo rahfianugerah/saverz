@@ -9,9 +9,18 @@ import {
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
+import { Select } from './ui/select';
 import { Textarea } from './ui/textarea';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+
+const httpMethodOptions = [
+  { value: 'GET' as const, label: 'GET' },
+  { value: 'POST' as const, label: 'POST' },
+  { value: 'PUT' as const, label: 'PUT' },
+  { value: 'PATCH' as const, label: 'PATCH' },
+  { value: 'DELETE' as const, label: 'DELETE' },
+];
 
 interface HeaderField {
   id: string;
@@ -122,17 +131,12 @@ export default function ApiEndpointArchitect() {
             <div className="grid grid-cols-1 gap-3 md:grid-cols-[auto_1fr]">
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Method</label>
-                <select
+                <Select
                   value={method}
-                  onChange={(event) => setMethod(event.target.value as HttpMethod)}
+                  onChange={(next) => setMethod(next as HttpMethod)}
+                  options={httpMethodOptions}
                   className="w-32"
-                >
-                  <option value="GET">GET</option>
-                  <option value="POST">POST</option>
-                  <option value="PUT">PUT</option>
-                  <option value="PATCH">PATCH</option>
-                  <option value="DELETE">DELETE</option>
-                </select>
+                />
               </div>
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Base URL</label>

@@ -8,9 +8,15 @@ import {
 } from 'react-icons/hi2';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { Select } from './ui/select';
 import { Textarea } from './ui/textarea';
 
 type SqlDialect = 'mysql' | 'postgresql';
+
+const sqlDialectOptions = [
+  { value: 'mysql' as const, label: 'MySQL' },
+  { value: 'postgresql' as const, label: 'PostgreSQL' },
+];
 
 export default function SqlFormatter() {
   const [dialect, setDialect] = useState<SqlDialect>('mysql');
@@ -74,15 +80,13 @@ export default function SqlFormatter() {
         <CardContent className="space-y-4">
           <div className="flex flex-wrap items-center gap-3">
             <label htmlFor="sql-dialect" className="text-xs font-medium text-muted-foreground">Dialect</label>
-            <select
+            <Select
               id="sql-dialect"
               value={dialect}
-              onChange={(event) => setDialect(event.target.value as SqlDialect)}
+              onChange={(next) => setDialect(next as SqlDialect)}
+              options={sqlDialectOptions}
               className="w-[180px]"
-            >
-              <option value="mysql">MySQL</option>
-              <option value="postgresql">PostgreSQL</option>
-            </select>
+            />
             <Button onClick={handleBeautify}>Beautify</Button>
             <Button onClick={handleCopy} variant="secondary" disabled={!output.trim()} className="gap-1.5">
               {copied ? <HiOutlineCheck size={16} /> : <HiOutlineClipboardDocument size={16} />}
