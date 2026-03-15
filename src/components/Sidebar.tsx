@@ -19,6 +19,12 @@ import { Button } from './ui/button';
 
 const navItems: { id: ActivePage; label: string; icon: React.ReactNode }[] = [
   { id: 'api-endpoint-architect', label: 'API Endpoint Architect', icon: <HiOutlineArrowTopRightOnSquare size={20} /> },
+  { id: 'schema-canvas', label: 'Schema Canvas', icon: <HiOutlineCubeTransparent size={20} /> },
+  { id: 'command-vault', label: 'Command Vault', icon: <HiOutlineCommandLine size={20} /> },
+  { id: 'hash-crypto-generator', label: 'Hash & Crypto', icon: <HiOutlineSparkles size={20} /> },
+  { id: 'markdown-csv-converter', label: 'Markdown / CSV', icon: <HiOutlineCodeBracket size={20} /> },
+  { id: 'jwt-debugger', label: 'JWT Debugger', icon: <HiOutlineKey size={20} /> },
+  { id: 'base64-url-encoder-decoder', label: 'Base64 / URL', icon: <HiOutlineLink size={20} /> },
   { id: 'credential-vault', label: 'Credential Vault', icon: <HiOutlineKey size={20} /> },
   { id: 'data-formatter', label: 'Data Formatter', icon: <HiOutlineCodeBracket size={20} /> },
   { id: 'links', label: 'Links Saver', icon: <HiOutlineLink size={20} /> },

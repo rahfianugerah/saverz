@@ -12,6 +12,12 @@ import PasswordVault from './PasswordVault';
 import SqlFormatter from './SqlFormatter';
 import CredentialVault from './CredentialVault';
 import ApiEndpointArchitect from './ApiEndpointArchitect';
+import MarkdownCsvConverter from './MarkdownCsvConverter';
+import LocalSchemaCanvas from './LocalSchemaCanvas';
+import CommandVault from './CommandVault';
+import HashCryptoGenerator from './HashCryptoGenerator';
+import JwtDebugger from './JwtDebugger';
+import Base64UrlEncoderDecoder from './Base64UrlEncoderDecoder';
 
 export default function AppShell() {
   const activePage = useStore($activePage);
@@ -23,6 +29,12 @@ export default function AppShell() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 md:px-8 py-6 md:py-10 w-full flex-1">
           <div key={activePage}>
             {activePage === 'api-endpoint-architect' && <ApiEndpointArchitect />}
+            {activePage === 'schema-canvas' && <LocalSchemaCanvas />}
+            {activePage === 'command-vault' && <CommandVault />}
+            {activePage === 'hash-crypto-generator' && <HashCryptoGenerator />}
+            {activePage === 'markdown-csv-converter' && <MarkdownCsvConverter />}
+            {activePage === 'jwt-debugger' && <JwtDebugger />}
+            {activePage === 'base64-url-encoder-decoder' && <Base64UrlEncoderDecoder />}
             {activePage === 'credential-vault' && <CredentialVault />}
             {activePage === 'prompts' && <PromptBuilder />}
             {activePage === 'data-formatter' && <DataFormatter />}
