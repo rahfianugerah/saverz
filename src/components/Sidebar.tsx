@@ -69,7 +69,7 @@ export default function Sidebar() {
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        <div className="w-64 h-full flex flex-col">
+        <div className="flex h-full w-64 min-h-0 flex-col">
           <div className="flex items-center justify-between border-b border-border px-6 py-6">
             <div className="flex w-full flex-col items-center justify-center text-center">
               <img src="/saverz-light.svg" alt="Saverz" height={50} width={50} />
@@ -77,7 +77,7 @@ export default function Sidebar() {
             </div>
           </div>
 
-          <nav className="flex-1 space-y-1 px-3 py-4">
+          <nav className="flex-1 min-h-0 space-y-1 overflow-y-auto px-3 py-4">
             {navItems.map((item) => {
               const isActive = activePage === item.id;
               return (
@@ -99,7 +99,7 @@ export default function Sidebar() {
             })}
           </nav>
 
-          <div className="border-t border-border px-6 py-4">
+          <div className="shrink-0 border-t border-border px-6 py-4">
             <p className="text-xs text-muted-foreground/70">&copy; 2026 Saverz. All Rights Reserved.</p>
           </div>
         </div>

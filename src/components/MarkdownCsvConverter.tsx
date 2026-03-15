@@ -1,16 +1,31 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   HiOutlineArrowsRightLeft,
   HiOutlineExclamationTriangle,
   HiOutlineTableCells,
   HiOutlineClipboardDocument,
   HiOutlineCheck,
+  HiOutlineTrash,
 } from 'react-icons/hi2';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Textarea } from './ui/textarea';
 import { Button } from './ui/button';
 
 type CsvDelimiter = ',' | '\t';
+
+type SourceType = 'csv' | 'markdown';
+
+interface ConversionHistoryItem {
+  id: string;
+  source: SourceType;
+  csv: string;
+  markdown: string;
+  delimiter: CsvDelimiter;
+  createdAt: number;
+  fileName?: string;
+}
+
+const HISTORY_STORAGE_KEY = 'boxul:markdown-csv-history:v1';
 
 function detectDelimiter(text: string): CsvDelimiter {
   const firstLine = text
@@ -165,12 +180,72 @@ function markdownToCsv(input: string, delimiter: CsvDelimiter): string {
     .join('\n');
 }
 
+function looksLikeMarkdownTable(input: string): boolean {
+  const lines = input
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  if (lines.length < 2) return false;
+  const hasPipes = lines[0].includes('|') && lines[1].includes('|');
+  const secondLineCells = parseMarkdownRow(lines[1]);
+  const hasDivider = secondLineCells.length > 0 && isDividerRow(secondLineCells);
+
+  return hasPipes && hasDivider;
+}
+
+function formatTimestamp(value: number): string {
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(new Date(value));
+}
+
 export default function MarkdownCsvConverter() {
   const [csv, setCsv] = useState('');
   const [markdown, setMarkdown] = useState('');
   const [error, setError] = useState('');
   const [copiedSide, setCopiedSide] = useState<'csv' | 'markdown' | null>(null);
   const [delimiter, setDelimiter] = useState<CsvDelimiter>(',');
+  const [history, setHistory] = useState<ConversionHistoryItem[]>([]);
+  const [isDragActive, setIsDragActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(HISTORY_STORAGE_KEY);
+      if (!raw) return;
+
+      const parsed = JSON.parse(raw) as ConversionHistoryItem[];
+      if (Array.isArray(parsed)) {
+        setHistory(parsed);
+      }
+    } catch {
+      setHistory([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
+  }, [history]);
+
+  const saveSnapshot = (source: SourceType, fileName?: string) => {
+    const currentCsv = csv.trim();
+    const currentMarkdown = markdown.trim();
+    if (!currentCsv && !currentMarkdown) return;
+
+    const snapshot: ConversionHistoryItem = {
+      id: crypto.randomUUID(),
+      source,
+      csv,
+      markdown,
+      delimiter,
+      fileName,
+      createdAt: Date.now(),
+    };
+
+    setHistory((current) => [snapshot, ...current].slice(0, 40));
+  };
 
   const handleCsvChange = (value: string) => {
     setCsv(value);
@@ -207,6 +282,87 @@ export default function MarkdownCsvConverter() {
     setTimeout(() => setCopiedSide(null), 1200);
   };
 
+  const applyCsvInput = (value: string) => {
+    setError('');
+    const nextDelimiter = detectDelimiter(value);
+    setDelimiter(nextDelimiter);
+    setCsv(value);
+    setMarkdown(csvToMarkdown(value));
+  };
+
+  const applyMarkdownInput = (value: string) => {
+    setError('');
+    setMarkdown(value);
+    setCsv(markdownToCsv(value, delimiter));
+  };
+
+  const handleImportFile = async (file: File) => {
+    try {
+      const content = await file.text();
+      if (!content.trim()) {
+        setError('Selected file is empty.');
+        return;
+      }
+
+      const lowerName = file.name.toLowerCase();
+      const isMarkdown = lowerName.endsWith('.md') || lowerName.endsWith('.markdown') || looksLikeMarkdownTable(content);
+
+      if (isMarkdown) {
+        applyMarkdownInput(content);
+        const markdownItem: ConversionHistoryItem = {
+          id: crypto.randomUUID(),
+          source: 'markdown',
+          csv: markdownToCsv(content, delimiter),
+          markdown: content,
+          delimiter,
+          fileName: file.name,
+          createdAt: Date.now(),
+        };
+
+        setHistory((current) => [markdownItem, ...current].slice(0, 40));
+      } else {
+        const nextDelimiter = detectDelimiter(content);
+        const nextMarkdown = csvToMarkdown(content);
+        setDelimiter(nextDelimiter);
+        setCsv(content);
+        setMarkdown(nextMarkdown);
+        const csvItem: ConversionHistoryItem = {
+          id: crypto.randomUUID(),
+          source: 'csv',
+          csv: content,
+          markdown: nextMarkdown,
+          delimiter: nextDelimiter,
+          fileName: file.name,
+          createdAt: Date.now(),
+        };
+
+        setHistory((current) => [csvItem, ...current].slice(0, 40));
+      }
+    } catch {
+      setError('Unable to read file. Use a text-based CSV, TSV, TXT, or Markdown file.');
+    }
+  };
+
+  const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragActive(false);
+
+    const file = event.dataTransfer.files?.[0];
+    if (!file) return;
+    await handleImportFile(file);
+  };
+
+  const deleteHistoryItem = (id: string) => {
+    setHistory((current) => current.filter((item) => item.id !== id));
+  };
+
+  const restoreHistoryItem = (item: ConversionHistoryItem) => {
+    setDelimiter(item.delimiter);
+    setCsv(item.csv);
+    setMarkdown(item.markdown);
+    setError('');
+  };
+
   return (
     <div className="space-y-6">
       <div className="mb-2 flex items-center gap-3">
@@ -232,6 +388,41 @@ export default function MarkdownCsvConverter() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv,.tsv,.txt,.md,.markdown"
+            className="hidden"
+            onChange={async (event) => {
+              const file = event.target.files?.[0];
+              if (file) {
+                await handleImportFile(file);
+              }
+              event.currentTarget.value = '';
+            }}
+          />
+
+          <div
+            onDragOver={(event) => {
+              event.preventDefault();
+              setIsDragActive(true);
+            }}
+            onDragLeave={() => setIsDragActive(false)}
+            onDrop={handleDrop}
+            className={`rounded-lg border border-dashed px-4 py-3 text-sm transition-colors ${
+              isDragActive
+                ? 'border-primary/80 bg-primary/10 text-foreground'
+                : 'border-border bg-background/40 text-muted-foreground'
+            }`}
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p>Drag and drop CSV/Markdown files here, or choose a file to import and auto-convert.</p>
+              <Button type="button" size="sm" variant="outline" onClick={() => fileInputRef.current?.click()}>
+                Choose File
+              </Button>
+            </div>
+          </div>
+
           {error && (
             <div className="flex items-start gap-2 rounded-lg border border-destructive/35 bg-destructive/10 p-3 text-sm text-destructive">
               <HiOutlineExclamationTriangle size={16} className="mt-0.5 shrink-0" />
@@ -289,6 +480,62 @@ export default function MarkdownCsvConverter() {
 
           <div className="rounded-lg border border-border bg-background/50 px-3 py-2 text-xs text-muted-foreground">
             Current CSV delimiter: {delimiter === '\t' ? 'Tab' : 'Comma'}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <Button type="button" variant="secondary" size="sm" onClick={() => saveSnapshot('csv')} disabled={!csv.trim()}>
+              Save CSV to Markdown Snapshot
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => saveSnapshot('markdown')}
+              disabled={!markdown.trim()}
+            >
+              Save Markdown to CSV Snapshot
+            </Button>
+          </div>
+
+          <div className="rounded-lg border border-border bg-background/40 p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-sm font-medium text-foreground">Conversion History</p>
+              <p className="text-xs text-muted-foreground">Saved locally, delete-only records (no editing).</p>
+            </div>
+
+            {history.length === 0 ? (
+              <p className="text-xs text-muted-foreground">No snapshots yet.</p>
+            ) : (
+              <div className="max-h-56 space-y-2 overflow-y-auto pr-1">
+                {history.map((item) => (
+                  <div key={item.id} className="flex items-center justify-between gap-2 rounded-md border border-border px-3 py-2">
+                    <div className="min-w-0">
+                      <p className="truncate text-xs font-medium text-foreground">
+                        {item.source === 'csv' ? 'CSV to Markdown' : 'Markdown to CSV'}
+                        {item.fileName ? ` - ${item.fileName}` : ''}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">{formatTimestamp(item.createdAt)}</p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button type="button" size="sm" variant="ghost" className="h-7" onClick={() => restoreHistoryItem(item)}>
+                        Load
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 w-7 p-0 text-destructive"
+                        onClick={() => deleteHistoryItem(item.id)}
+                        aria-label="Delete snapshot"
+                        title="Delete snapshot"
+                      >
+                        <HiOutlineTrash size={14} />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
