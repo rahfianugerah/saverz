@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { useStore } from '@nanostores/react';
 import { $activePage, $sidebarOpen, type ActivePage } from '../lib/stores';
 import {
@@ -16,10 +16,13 @@ import {
 } from 'react-icons/hi2';
 import { cn } from '../lib/utils';
 import { Button } from './ui/button';
+import { Input } from './ui/input';
+
+type SortMode = 'default' | 'az' | 'za';
 
 const navItems: { id: ActivePage; label: string; icon: React.ReactNode }[] = [
   { id: 'api-endpoint-architect', label: 'API Endpoint Architect', icon: <HiOutlineArrowTopRightOnSquare size={20} /> },
-  { id: 'schema-canvas', label: 'Schema Canvas', icon: <HiOutlineCubeTransparent size={20} /> },
+  { id: 'schema-canvas', label: 'Schema Canvas (Experimental)', icon: <HiOutlineCubeTransparent size={20} /> },
   { id: 'command-vault', label: 'Command Vault', icon: <HiOutlineCommandLine size={20} /> },
   { id: 'hash-crypto-generator', label: 'Hash & Crypto', icon: <HiOutlineSparkles size={20} /> },
   { id: 'markdown-csv-converter', label: 'Markdown / CSV', icon: <HiOutlineCodeBracket size={20} /> },
@@ -39,6 +42,20 @@ const navItems: { id: ActivePage; label: string; icon: React.ReactNode }[] = [
 export default function Sidebar() {
   const activePage = useStore($activePage);
   const sidebarOpen = useStore($sidebarOpen);
+  const [query, setQuery] = useState('');
+  const [sortMode, setSortMode] = useState<SortMode>('default');
+
+  const filteredNavItems = useMemo(() => {
+    const lowered = query.trim().toLowerCase();
+    const base = lowered
+      ? navItems.filter((item) => item.label.toLowerCase().includes(lowered))
+      : navItems;
+
+    if (sortMode === 'default') return base;
+
+    const sorted = [...base].sort((a, b) => a.label.localeCompare(b.label));
+    return sortMode === 'za' ? sorted.reverse() : sorted;
+  }, [query, sortMode]);
 
   const handleNav = (page: ActivePage) => {
     $activePage.set(page);
@@ -77,8 +94,32 @@ export default function Sidebar() {
             </div>
           </div>
 
-          <nav className="flex-1 min-h-0 space-y-1 overflow-y-auto px-3 py-4">
-            {navItems.map((item) => {
+          <div className="shrink-0 space-y-2 border-b border-border px-3 py-3">
+            <Input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Filter tools..."
+              className="h-9"
+            />
+            <div className="flex items-center gap-2">
+              <label htmlFor="sidebar-sort" className="text-xs text-muted-foreground">
+                Sort
+              </label>
+              <select
+                id="sidebar-sort"
+                value={sortMode}
+                onChange={(event) => setSortMode(event.target.value as SortMode)}
+                className="h-8 flex-1 rounded-lg border border-input bg-background px-2 text-xs"
+              >
+                <option value="default">Default</option>
+                <option value="az">A to Z</option>
+                <option value="za">Z to A</option>
+              </select>
+            </div>
+          </div>
+
+          <nav className="scrollbar-hidden flex-1 min-h-0 space-y-1 overflow-y-auto scroll-smooth px-3 py-4">
+            {filteredNavItems.map((item) => {
               const isActive = activePage === item.id;
               return (
                 <Button
@@ -97,6 +138,10 @@ export default function Sidebar() {
                 </Button>
               );
             })}
+
+            {filteredNavItems.length === 0 && (
+              <p className="px-2 py-3 text-xs text-muted-foreground">No tools matched your filter.</p>
+            )}
           </nav>
 
           <div className="shrink-0 border-t border-border px-6 py-4">

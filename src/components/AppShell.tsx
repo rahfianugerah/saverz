@@ -18,6 +18,7 @@ import CommandVault from './CommandVault';
 import HashCryptoGenerator from './HashCryptoGenerator';
 import JwtDebugger from './JwtDebugger';
 import Base64UrlEncoderDecoder from './Base64UrlEncoderDecoder';
+import { cn } from '../lib/utils';
 
 export default function AppShell() {
   const activePage = useStore($activePage);
@@ -26,7 +27,12 @@ export default function AppShell() {
     <div className="flex min-h-screen">
       <Sidebar />
       <main className="flex-1 min-w-0 flex flex-col md:ml-0 mt-14 md:mt-0 overflow-y-auto">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 md:px-8 py-6 md:py-10 w-full flex-1">
+        <div
+          className={cn(
+            'mx-auto w-full flex-1 px-4 py-6 sm:px-6 md:px-8 md:py-10',
+            activePage === 'schema-canvas' ? 'max-w-none' : 'max-w-5xl'
+          )}
+        >
           <div key={activePage}>
             {activePage === 'api-endpoint-architect' && <ApiEndpointArchitect />}
             {activePage === 'schema-canvas' && <LocalSchemaCanvas />}
