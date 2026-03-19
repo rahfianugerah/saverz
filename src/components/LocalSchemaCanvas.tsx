@@ -112,6 +112,9 @@ const PRISMA_TYPE_MAP: Record<ColumnType, string> = {
   UUID: 'String',
 };
 
+const CANVAS_NATIVE_SELECT_CLASS =
+  'h-8 rounded-lg border border-input bg-background px-2 text-xs text-foreground transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring hover:border-primary/45 hover:bg-accent/65';
+
 function toSnakeCase(value: string): string {
   const sanitized = value
     .trim()
@@ -462,7 +465,7 @@ const TableNodeComponent = memo(({ id, data, selected }: NodeProps<TableFlowNode
               <select
                 value={column.type}
                 onChange={(event) => data.onColumnChange(id, column.id, { type: event.target.value as ColumnType })}
-                className="nodrag h-8 rounded-lg border border-input bg-background px-2 text-xs"
+                className={cn('nodrag', CANVAS_NATIVE_SELECT_CLASS)}
               >
                 <option value="Int">Int</option>
                 <option value="VarChar">VarChar</option>
@@ -946,8 +949,8 @@ export default function LocalSchemaCanvas() {
     : activeRelationType;
 
   return (
-    <div className="h-full w-full space-y-4">
-      <div className="mb-1 flex items-center gap-3">
+    <div className="flex h-full min-h-0 w-full min-w-0 flex-col">
+      <div className="mb-2 flex items-center gap-3 px-4 pt-3 md:px-5 md:pt-4">
         <div className="rounded-lg border border-border bg-card p-2.5">
           <HiOutlineCubeTransparent size={22} className="text-primary" />
         </div>
@@ -959,73 +962,75 @@ export default function LocalSchemaCanvas() {
         </div>
       </div>
 
-      <div className="relative h-[calc(100vh-10.5rem)] min-h-[720px] w-full overflow-hidden rounded-xl border border-border bg-card/55">
-        <div ref={splitRef} className="flex h-full min-h-0 w-full">
-          <div ref={captureRef} className="relative min-h-0 min-w-0 flex-1">
-            <div className="absolute left-4 top-4 z-20 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card/90 p-2 backdrop-blur-sm">
-              <Button size="sm" variant={activeTool === 'select' ? 'default' : 'ghost'} className="h-8 gap-1.5" onClick={() => setActiveTool('select')}>
-                <HiOutlineCursorArrowRays size={14} />
-                Select Tool
-              </Button>
-              <Button size="sm" variant={activeTool === 'group' ? 'default' : 'ghost'} className="h-8 gap-1.5" onClick={() => setActiveTool('group')}>
-                <HiOutlineSquaresPlus size={14} />
-                Group Tool
-              </Button>
-              <Button size="sm" variant={activeTool === 'note' ? 'default' : 'ghost'} className="h-8 gap-1.5" onClick={() => setActiveTool('note')}>
-                <HiOutlineDocumentText size={14} />
-                Sticky Notes Tool
-              </Button>
+      <div className="relative min-h-0 w-full flex-1 overflow-hidden rounded-xl border border-border bg-card/55">
+        <div ref={splitRef} className="flex h-full min-h-0 w-full items-stretch">
+          <div ref={captureRef} className="relative h-full min-h-0 min-w-0 flex-1">
+            <div className="pointer-events-none absolute inset-x-4 top-4 z-20 flex flex-wrap items-start justify-between gap-3">
+              <div className="pointer-events-auto flex max-w-full flex-wrap items-center gap-2 rounded-xl border border-border bg-card/90 p-2 backdrop-blur-sm">
+                <Button size="sm" variant={activeTool === 'select' ? 'default' : 'ghost'} className="h-8 gap-1.5" onClick={() => setActiveTool('select')}>
+                  <HiOutlineCursorArrowRays size={14} />
+                  Select Tool
+                </Button>
+                <Button size="sm" variant={activeTool === 'group' ? 'default' : 'ghost'} className="h-8 gap-1.5" onClick={() => setActiveTool('group')}>
+                  <HiOutlineSquaresPlus size={14} />
+                  Group Tool
+                </Button>
+                <Button size="sm" variant={activeTool === 'note' ? 'default' : 'ghost'} className="h-8 gap-1.5" onClick={() => setActiveTool('note')}>
+                  <HiOutlineDocumentText size={14} />
+                  Sticky Notes Tool
+                </Button>
 
-              <span className="mx-1 h-6 w-px bg-border" />
+                <span className="mx-1 h-6 w-px bg-border" />
 
-              <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={addTable}>
-                <HiOutlinePlus size={14} />
-                Add Table
-              </Button>
-              <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={groupSelectedTables}>
-                <HiOutlineSquaresPlus size={14} />
-                Group Selected
-              </Button>
-              <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={ungroupSelected}>
-                <HiOutlineArrowsPointingOut size={14} />
-                Ungroup
-              </Button>
-              <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={clearCanvas}>
-                <HiOutlineTrash size={14} />
-                Clear
-              </Button>
+                <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={addTable}>
+                  <HiOutlinePlus size={14} />
+                  Add Table
+                </Button>
+                <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={groupSelectedTables}>
+                  <HiOutlineSquaresPlus size={14} />
+                  Group Selected
+                </Button>
+                <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={ungroupSelected}>
+                  <HiOutlineArrowsPointingOut size={14} />
+                  Ungroup
+                </Button>
+                <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={clearCanvas}>
+                  <HiOutlineTrash size={14} />
+                  Clear
+                </Button>
 
-              <span className="mx-1 h-6 w-px bg-border" />
+                <span className="mx-1 h-6 w-px bg-border" />
 
-              <label className="text-xs text-muted-foreground">Relation</label>
-              <select
-                value={selectedEdgeRelation}
-                onChange={(event) => updateRelationType(event.target.value as RelationType)}
-                className="h-8 rounded-lg border border-input bg-background px-2 text-xs"
-              >
-                <option value="1:1">1:1</option>
-                <option value="1:n">1:n</option>
-                <option value="n:m">n:m</option>
-              </select>
-            </div>
+                <label className="text-xs text-muted-foreground">Relation</label>
+                <select
+                  value={selectedEdgeRelation}
+                  onChange={(event) => updateRelationType(event.target.value as RelationType)}
+                  className={cn(CANVAS_NATIVE_SELECT_CLASS, 'w-20')}
+                >
+                  <option value="1:1">1:1</option>
+                  <option value="1:n">1:n</option>
+                  <option value="n:m">n:m</option>
+                </select>
+              </div>
 
-            <div className="absolute right-4 top-4 z-20 flex items-center gap-2 rounded-xl border border-border bg-card/90 p-2 backdrop-blur-sm">
-              <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={exportSqlFile}>
-                <HiOutlineDocumentArrowDown size={14} />
-                Export SQL
-              </Button>
-              <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={() => exportCanvasImage('png')}>
-                <HiOutlinePhoto size={14} />
-                PNG
-              </Button>
-              <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={() => exportCanvasImage('jpg')}>
-                <HiOutlinePhoto size={14} />
-                JPG
-              </Button>
-              <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={() => exportCanvasImage('svg')}>
-                <HiOutlinePhoto size={14} />
-                SVG
-              </Button>
+              <div className="pointer-events-auto flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card/90 p-2 backdrop-blur-sm">
+                <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={exportSqlFile}>
+                  <HiOutlineDocumentArrowDown size={14} />
+                  Export SQL
+                </Button>
+                <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={() => exportCanvasImage('png')}>
+                  <HiOutlinePhoto size={14} />
+                  PNG
+                </Button>
+                <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={() => exportCanvasImage('jpg')}>
+                  <HiOutlinePhoto size={14} />
+                  JPG
+                </Button>
+                <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={() => exportCanvasImage('svg')}>
+                  <HiOutlinePhoto size={14} />
+                  SVG
+                </Button>
+              </div>
             </div>
 
             <ReactFlow<FlowNode, FlowEdge>
@@ -1049,11 +1054,12 @@ export default function LocalSchemaCanvas() {
                 markerEnd: { type: MarkerType.ArrowClosed, color: 'hsl(var(--primary))' },
                 style: { stroke: 'hsl(var(--primary) / 0.8)', strokeWidth: 1.8 },
               }}
+              proOptions={{ hideAttribution: true }}
               panOnDrag={panMode}
               selectionOnDrag={!panMode}
               selectionMode={SelectionMode.Partial}
             >
-              <Background color="hsl(var(--border) / 0.55)" gap={24} size={1.2} />
+              <Background variant="dots" color="hsl(var(--muted-foreground) / 0.45)" gap={22} size={1.9} />
               <MiniMap
                 position="bottom-right"
                 pannable

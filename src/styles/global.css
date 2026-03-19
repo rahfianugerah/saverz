@@ -114,4 +114,8 @@
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-secondary;
   }
+
+  .react-flow__attribution {
+    display: none !important;
+  }
 }

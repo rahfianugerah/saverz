@@ -127,14 +127,14 @@ export default function Sidebar() {
                   onClick={() => handleNav(item.id)}
                   variant="ghost"
                   className={cn(
-                    'h-auto w-full justify-start gap-4 rounded-lg px-4 py-3 text-sm font-medium',
+                    'h-auto w-full items-start justify-start gap-4 rounded-lg px-4 py-3 text-left text-sm font-medium',
                     isActive
                       ? 'bg-primary/15 text-foreground border border-primary/25'
                       : 'text-muted-foreground hover:text-foreground hover:bg-accent/60'
                   )}
                 >
                   <span>{item.icon}</span>
-                  <span>{item.label}</span>
+                  <span className="whitespace-normal break-words leading-snug">{item.label}</span>
                 </Button>
               );
             })}

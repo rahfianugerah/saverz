@@ -22,18 +22,21 @@ import { cn } from '../lib/utils';
 
 export default function AppShell() {
   const activePage = useStore($activePage);
+  const schemaActive = activePage === 'schema-canvas';
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex h-screen min-h-screen overflow-hidden">
       <Sidebar />
-      <main className="flex-1 min-w-0 flex flex-col md:ml-0 mt-14 md:mt-0 overflow-y-auto">
+      <main className="mt-14 flex min-h-0 min-w-0 flex-1 flex-col md:mt-0">
         <div
           className={cn(
-            'mx-auto w-full flex-1 px-4 py-6 sm:px-6 md:px-8 md:py-10',
-            activePage === 'schema-canvas' ? 'max-w-none' : 'max-w-5xl'
+            'mx-auto w-full min-h-0 flex-1 px-4 py-6 sm:px-6 md:px-8 md:py-10',
+            schemaActive
+              ? 'max-w-none min-h-0 overflow-hidden px-0 py-0 sm:px-0 md:px-0 md:py-0'
+              : 'max-w-5xl overflow-y-auto'
           )}
         >
-          <div key={activePage}>
+          <div key={activePage} className={cn(schemaActive && 'h-full min-h-0')}>
             {activePage === 'api-endpoint-architect' && <ApiEndpointArchitect />}
             {activePage === 'schema-canvas' && <LocalSchemaCanvas />}
             {activePage === 'command-vault' && <CommandVault />}
